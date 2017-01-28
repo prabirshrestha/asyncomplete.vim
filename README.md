@@ -23,8 +23,8 @@ asyncomplete.vim deliberately does not contain any sources. Please use one of th
 
 ```vim
 function! s:js_completor(opt, ctx) abort
-    let l:col = col('.')
-    let l:typed = strpart(getline('.'), 0, l:col)
+    let l:col = a:ctx['col']
+    let l:typed = a:ctx['typed']
 
     let l:kw = matchstr(l:typed, '\v\S+$')
     let l:kwlen = len(l:kw)
