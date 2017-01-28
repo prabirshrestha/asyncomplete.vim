@@ -13,6 +13,12 @@ in pure vim script with python dependency removed.
 Plug 'prabirshrestha/asyncomplete.vim'
 ```
 
+### Sources
+
+asyncomplete.vim deliberately does not contain any sources. Please use one of the following sources or create your own.
+
+* [UltiSnips] (https://github.com/SirVer/ultisnips) via https://github.com/prabirshrestha/asyncomplete-ultisnips.vim
+
 ### Example
 
 ```vim
