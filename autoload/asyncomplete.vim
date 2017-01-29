@@ -2,6 +2,8 @@ let s:sources = {}
 let s:change_timer = -1
 let s:last_tick = ''
 let s:last_matches = []
+let s:has_popped_up = 0
+let s:complete_timer_ctx = {}
 
 function! asyncomplete#enable_for_buffer() abort
     let b:asyncomplete_enable = 1
@@ -84,7 +86,8 @@ function! s:change_tick_start() abort
         return
     endif
     let s:last_tick = s:change_tick()
-    let s:change_timer = timer_start(g:asyncomplete_completion_delay, function('s:check_changes'), { 'repeat': -1 })
+    " changes every 30ms, which is 0.03s, it should be fast enough
+    let s:change_timer = timer_start(30, function('s:check_changes'), { 'repeat': -1 })
     call s:on_changed()
 endfunction
 
@@ -100,6 +103,11 @@ endfunction
 function! s:on_changed() abort
     if get(b:, 'asyncomplete_enable', 0) == 0
         return
+    endif
+
+    if exists('s:complete_timer')
+        call timer_stop(s:complete_timer)
+        unlet s:complete_timer
     endif
 
     let l:ctx = asyncomplete#context()
@@ -135,11 +143,19 @@ function! s:python_cm_complete(srcs, name, ctx, startcol, matches) abort
         let s:matches[a:name]['matches'] = a:matches
     endif
 
+    if s:has_popped_up == 1
+        call s:python_refresh_completions(a:ctx)
+    endif
+endfunction
+
+function! s:python_cm_complete_timeout(srcs, ctx) abort
     call s:python_refresh_completions(a:ctx)
+    let s:has_popped_up = 1
 endfunction
 
 function! s:python_cm_refresh(srcs, ctx) abort
     let s:sources = a:srcs
+    let s:has_popped_up = 0
     let l:typed = a:ctx['typed']
 
     " simple complete done
@@ -170,10 +186,17 @@ function! s:python_cm_refresh(srcs, ctx) abort
     endfor
 
     call s:notify_sources_to_refresh(l:refreshes_calls, a:ctx)
-    call s:python_refresh_completions(a:ctx)
 endfunction
 
 function! s:notify_sources_to_refresh(calls, ctx) abort
+    if exists('s:complete_timer')
+        call timer_stop(s:complete_timer)
+        unlet s:complete_timer
+    endif
+
+    let s:complete_timer = timer_start(g:asyncomplete_completion_delay, function('s:complete_timeout'))
+    let s:complete_timer_ctx = a:ctx
+
     for l:name in a:calls
         try
             call s:sources[l:name].completor(s:sources[l:name], a:ctx)
@@ -277,6 +300,15 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
     endif
 
     call complete(a:startcol, a:matches)
+endfunction
+
+function! s:complete_timeout(timer)
+    " finished, clean variable
+    unlet s:complete_timer
+    if s:complete_timer_ctx != asyncomplete#context()
+        return
+    endif
+    call s:python_cm_complete_timeout(s:sources, s:complete_timer_ctx)
 endfunction
 
 function! s:menu_selected()
