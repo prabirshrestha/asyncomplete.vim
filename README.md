@@ -62,7 +62,7 @@ call asyncomplete#register_source({
     \ })
 ```
 
-The above sample shows synchornous completion. If you would like to make it async just call `asyncomplete#complete` whenever you have the results ready.
+The above sample shows synchronous completion. If you would like to make it async just call `asyncomplete#complete` whenever you have the results ready.
 
 ```vim
 call timer_start(2000, {timer-> asyncomplete#complete(a:opt['name'], a:ctx, l:startcol, l:matches)})
