@@ -17,6 +17,7 @@ Plug 'prabirshrestha/asyncomplete.vim'
 
 asyncomplete.vim deliberately does not contain any sources. Please use one of the following sources or create your own.
 
+* Buffer via https://github.com/prabirshrestha/asyncomplete-buffer.vim
 * [UltiSnips] (https://github.com/SirVer/ultisnips) via https://github.com/prabirshrestha/asyncomplete-ultisnips.vim
 
 ### Example
