@@ -13,6 +13,14 @@ in pure vim script with python dependency removed.
 Plug 'prabirshrestha/asyncomplete.vim'
 ```
 
+#### Tab completion
+
+```vim
+inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+inoremap <expr> <cr> pumvisible() ? "\<C-y>\<cr>" : "\<cr>"
+```
+
 ### Sources
 
 asyncomplete.vim deliberately does not contain any sources. Please use one of the following sources or create your own.
@@ -56,17 +64,8 @@ call asyncomplete#register_source({
 
 The above sample shows synchornous completion. If you would like to make it async just call `asyncomplete#complete` whenever you have the results ready.
 
-
 ```vim
 call timer_start(2000, {timer-> asyncomplete#complete(a:opt['name'], a:ctx, l:startcol, l:matches)})
-```
-
-### Tab completion
-
-```vim
-inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
-inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-inoremap <expr> <cr> pumvisible() ? "\<C-y>\<cr>" : "\<cr>"
 ```
 
 ### Credits
