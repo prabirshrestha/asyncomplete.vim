@@ -1,4 +1,4 @@
-asyncomplete.vim (exprimental)
+asyncomplete.vim (experimental)
 ==============================
 
 Provide async autocompletion for vim8 and neovim with `timers`.
