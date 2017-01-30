@@ -176,8 +176,14 @@ function! s:python_cm_refresh(srcs, ctx) abort
                     break
                 endif
             endfor
-        else
-            let l:refresh = 1
+        endif
+        if has_key(l:info, 'blacklist')
+            for l:filetype in l:info['blacklist']
+                if l:filetype == &filetype || l:filetype == '*'
+                    let l:refresh = 0
+                    break
+                endif
+            endfor
         endif
 
         if l:refresh == 1
@@ -198,11 +204,11 @@ function! s:notify_sources_to_refresh(calls, ctx) abort
     let s:complete_timer_ctx = a:ctx
 
     for l:name in a:calls
-        try
+        " try
             call s:sources[l:name].completor(s:sources[l:name], a:ctx)
-        catch
-            continue
-        endtry
+        " catch
+        "     continue
+        " endtry
     endfor
 endfunction
 
