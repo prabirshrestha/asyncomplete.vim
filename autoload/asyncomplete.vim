@@ -25,7 +25,7 @@ function! asyncomplete#register_source(info) abort
         execute 'augroup asyncomplete_source_event_' . a:info['name']
         for l:event in a:info['events']
             let l:exec =  'if get(b:,"asyncomplete_enable",0) | call s:python_cm_event("' . a:info['name'] . '", "'.l:event.'",asyncomplete#context()) | endif'
-            if type(l:event) == v:t_string
+            if type(l:event) == type('')
                 execute 'au ' . l:event . ' * ' . l:exec
             elseif type(l:event) == v:t_list
                 execute 'au ' . join(l:event,' ') .' ' .  l:exec
@@ -245,7 +245,7 @@ function! s:python_refresh_completions(ctx) abort
         let l:normalizedcurmatches = []
         for l:item in l:curmatches
             let l:e = {}
-            if type(l:item) == v:t_string
+            if type(l:item) == type('')
                 let l:e['word'] = l:item
             else
                 let l:e = copy(l:item)
