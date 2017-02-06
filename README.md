@@ -21,6 +21,13 @@ inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <cr> pumvisible() ? "\<C-y>\<cr>" : "\<cr>"
 ```
 
+#### Preview Window
+If you would like to disable the preview window remove preview from `completeopt`.
+
+```vim
+set completeopt-=preview
+```
+
 ### Sources
 
 asyncomplete.vim deliberately does not contain any sources. Please use one of the following sources or create your own.
