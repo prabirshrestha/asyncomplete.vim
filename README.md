@@ -22,10 +22,23 @@ inoremap <expr> <cr> pumvisible() ? "\<C-y>\<cr>" : "\<cr>"
 ```
 
 #### Preview Window
-If you would like to disable the preview window remove preview from `completeopt`.
+
+To disable preview window:
 
 ```vim
-set completeopt-=preview
+set completeop-=preview
+```
+
+To enable preview window:
+
+```vim
+set completeopt+=preview
+```
+
+To auto close preview window when completion is done.
+
+```vim
+autocmd CompleteDone * pclose
 ```
 
 ### Sources
