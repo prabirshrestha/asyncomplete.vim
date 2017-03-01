@@ -38,7 +38,7 @@ set completeopt+=preview
 To auto close preview window when completion is done.
 
 ```vim
-autocmd CompleteDone * pclose
+autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
 ```
 
 ### Sources
