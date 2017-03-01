@@ -4,8 +4,17 @@ let s:last_tick = ''
 let s:last_matches = []
 let s:has_popped_up = 0
 let s:complete_timer_ctx = {}
+let s:already_setup = 0
+
+" do nothing, place it here only to avoid the message
+autocmd User asyncomplete_setup silent
 
 function! asyncomplete#enable_for_buffer() abort
+    if s:already_setup == 0
+        doautocmd User asyncomplete_setup
+        let s:already_setup = 1
+    endif
+
     let b:asyncomplete_enable = 1
     augroup ayncomplete
         autocmd! * <buffer>
