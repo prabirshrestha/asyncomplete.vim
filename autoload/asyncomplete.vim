@@ -1,6 +1,6 @@
 let s:sources = {}
 let s:change_timer = -1
-let s:last_tick = ''
+let s:last_tick = []
 let s:has_popped_up = 0
 let s:complete_timer_ctx = {}
 let s:already_setup = 0
@@ -78,6 +78,14 @@ function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
     call s:python_cm_complete(a:name, a:ctx, a:startcol, a:matches, l:refresh, 0)
 endfunction
 
+function! asyncomplete#force_refresh() abort
+    if get(b:, 'asyncomplete_enable', 0) == 0
+        return
+    endif
+    call s:python_cm_refresh(asyncomplete#context(), 1)
+    return ''
+endfunction
+
 function! asyncomplete#context() abort
 	let l:ret = {'bufnr':bufnr('%'), 'curpos':getcurpos(), 'changedtick':b:changedtick}
 	let l:ret['lnum'] = l:ret['curpos'][1]
@@ -122,7 +130,7 @@ function! s:change_tick_stop() abort
         return
     endif
     call timer_stop(s:change_timer)
-    let s:last_tick = ''
+    let s:last_tick = []
     let s:change_timer = -1
 endfunction
 
@@ -156,6 +164,8 @@ endfunction
 function! s:python_cm_complete(name, ctx, startcol, matches, refresh, outdated) abort
     if (a:outdated)
         " TODO: ignore outdated for now
+        call s:log('outdated')
+        call s:notify_sources_to_refresh([a:name], asyncomplete#context())
         return
     endif
 
@@ -218,6 +228,11 @@ endfunction
 
 function! s:python_cm_refresh(ctx, force) abort
     let l:has_popped_up = 0
+    if a:force
+        call s:notify_sources_to_refresh(s:get_active_sources_for_buffer(), a:ctx)
+        return
+    endif
+
     let l:typed = a:ctx['typed']
     let l:matchpos = matchstrpos(l:typed, '\k\+$')
     let l:startpos = l:matchpos[1]
@@ -225,7 +240,7 @@ function! s:python_cm_refresh(ctx, force) abort
 
     let l:typed_len = l:endpos - l:startpos
     let l:sources_to_notify = []
-    if l:typed_len == 1 || a:force
+    if l:typed_len == 1
         let l:sources_to_notify = s:get_active_sources_for_buffer()
     endif
 
@@ -241,9 +256,9 @@ function! s:notify_sources_to_refresh(sources, ctx) abort
     let s:complete_timer = timer_start(g:asyncomplete_completion_delay, function('s:complete_timeout'))
     let s:complete_timer_ctx = a:ctx
 
-    " call s:log('notify_sources_to_refresh', a:sources, a:ctx)
     for l:name in a:sources
         try
+            call s:log('notify_source_to_refresh', l:name, a:ctx)
             call s:sources[l:name].completor(s:sources[l:name], a:ctx)
         catch
             continue
@@ -332,7 +347,7 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
     endif
 
     " something selected by user, do not refresh the menu
-    if s:menu_selected()
+    if asyncomplete#menu_selected()
         return 0
     endif
 
@@ -355,7 +370,7 @@ function! s:complete_timeout(timer)
     call s:python_cm_complete_timeout(s:sources, s:complete_timer_ctx)
 endfunction
 
-function! s:menu_selected()
+function! asyncomplete#menu_selected()
     " when the popup menu is visible, v:completed_item will be the
     " current_selected item
     " if v:completed_item is empty, no item is selected
