@@ -6,7 +6,7 @@ let s:complete_timer_ctx = {}
 let s:already_setup = 0
 
 function! s:log(...) abort
-    call writefile([json_encode(a:000)], expand('~/Desktop/asyncomplete.log'), 'a')
+    " call writefile([json_encode(a:000)], expand('~/Desktop/asyncomplete.log'), 'a')
 endfunction
 
 " do nothing, place it here only to avoid the message
