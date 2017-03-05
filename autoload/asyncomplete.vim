@@ -5,8 +5,10 @@ let s:has_popped_up = 0
 let s:complete_timer_ctx = {}
 let s:already_setup = 0
 
-function! s:log(...) abort
-    " call writefile([json_encode(a:000)], expand('~/Desktop/asyncomplete.log'), 'a')
+function! asyncomplete#log(...) abort
+    if !empty(g:asyncomplete_log_file)
+        call writefile([json_encode(a:000)], g:asyncomplete_log_file, 'a')
+    endif
 endfunction
 
 " do nothing, place it here only to avoid the message
@@ -25,9 +27,9 @@ function! asyncomplete#enable_for_buffer() abort
         autocmd InsertEnter <buffer> call s:change_tick_start()
         autocmd InsertLeave <buffer> call s:change_tick_stop()
         " working together with timer, the timer is for detecting changes
-		" popup menu is visible. TextChangedI will not be triggered when popup
-		" menu is visible, but TextChangedI is more efficient and faster than
-		" timer when popup menu is not visible.
+        " popup menu is visible. TextChangedI will not be triggered when popup
+        " menu is visible, but TextChangedI is more efficient and faster than
+        " timer when popup menu is not visible.
         autocmd TextChangedI <buffer> call s:check_changes()
     augroup END
 endfunction
@@ -70,7 +72,7 @@ function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
     endif
 
     " ignore the request if context has changed
-	if asyncomplete#context_changed(a:ctx)
+    if asyncomplete#context_changed(a:ctx)
         call s:python_cm_complete(a:name, a:ctx, a:startcol, a:matches, l:refresh, 1)
         return 1
     endif
@@ -87,28 +89,29 @@ function! asyncomplete#force_refresh() abort
 endfunction
 
 function! asyncomplete#context() abort
-	let l:ret = {'bufnr':bufnr('%'), 'curpos':getcurpos(), 'changedtick':b:changedtick}
-	let l:ret['lnum'] = l:ret['curpos'][1]
-	let l:ret['col'] = l:ret['curpos'][2]
-	let l:ret['filetype'] = &filetype
-	let l:ret['filepath'] = expand('%:p')
-	if l:ret['filepath'] == ''
-		" this is necessary here, otherwise empty filepath is somehow
-		" converted to None in vim's python binding.
-		let l:ret['filepath'] = ""
-	endif
-	let l:ret['typed'] = strpart(getline(l:ret['lnum']),0,l:ret['col']-1)
-	return l:ret
+    let l:ret = {'bufnr':bufnr('%'), 'curpos':getcurpos(), 'changedtick':b:changedtick}
+    let l:ret['lnum'] = l:ret['curpos'][1]
+    let l:ret['col'] = l:ret['curpos'][2]
+    let l:ret['filetype'] = &filetype
+    let l:ret['filepath'] = expand('%:p')
+    if l:ret['filepath'] == ''
+        " this is necessary here, otherwise empty filepath is somehow
+        " converted to None in vim's python binding.
+        let l:ret['filepath'] = ""
+    endif
+    let l:ret['typed'] = strpart(getline(l:ret['lnum']),0,l:ret['col']-1)
+    return l:ret
 endfunction
 
 function! asyncomplete#context_changed(ctx)
-	" return (b:changedtick!=a:ctx['changedtick']) || (getcurpos()!=a:ctx['curpos'])
-	" Note: changedtick is triggered when `<c-x><c-u>` is pressed due to vim's
-	" bug, use curpos as workaround
-	return getcurpos() != a:ctx['curpos']
+    " return (b:changedtick!=a:ctx['changedtick']) || (getcurpos()!=a:ctx['curpos'])
+    " Note: changedtick is triggered when `<c-x><c-u>` is pressed due to vim's
+    " bug, use curpos as workaround
+    return getcurpos() != a:ctx['curpos']
 endfunction
 
 function! s:python_cm_insert_enter() abort
+    call asyncomplete#log('core', 'python_cm_insert_enter')
     let s:matches = {}
 endfunction
 
@@ -162,14 +165,11 @@ function! s:change_tick() abort
 endfunction
 
 function! s:python_cm_complete(name, ctx, startcol, matches, refresh, outdated) abort
+    call asyncomplete#log('core', 's:python_cm_complete', a:name, a:ctx, a:startcol, a:refresh, a:outdated)
     if (a:outdated)
-        " TODO: ignore outdated for now
-        call s:log('outdated')
         call s:notify_sources_to_refresh([a:name], asyncomplete#context())
         return
     endif
-
-    call s:log(a:name, a:ctx, a:startcol, len(a:matches))
 
     if !has_key(s:matches, a:name)
         let s:matches[a:name] = {}
@@ -234,15 +234,24 @@ function! s:python_cm_refresh(ctx, force) abort
     endif
 
     let l:typed = a:ctx['typed']
-    let l:matchpos = matchstrpos(l:typed, '\k\+$')
-    let l:startpos = l:matchpos[1]
-    let l:endpos = l:matchpos[2]
-
-    let l:typed_len = l:endpos - l:startpos
     let l:sources_to_notify = []
-    if l:typed_len == 1
-        let l:sources_to_notify = s:get_active_sources_for_buffer()
-    endif
+
+    for l:name in s:get_active_sources_for_buffer()
+        let l:source = s:sources[l:name]
+        let l:refresh_pattern = '\k\+$'
+        let l:matchpos = matchstrpos(l:typed, l:refresh_pattern)
+        let l:startpos = l:matchpos[1]
+        let l:endpos = l:matchpos[2]
+
+        call asyncomplete#log('core', 's:python_cm_refresh', l:matchpos, a:ctx)
+
+        let l:typed_len = l:endpos - l:startpos
+        if l:typed_len == 1
+            call add(l:sources_to_notify, l:name)
+        elseif has_key(s:matches, l:name) && s:matches[l:name]['refresh']
+            call add(l:sources_to_notify, l:name)
+        endif
+    endfor
 
     call s:notify_sources_to_refresh(l:sources_to_notify, a:ctx)
 endfunction
@@ -258,9 +267,10 @@ function! s:notify_sources_to_refresh(sources, ctx) abort
 
     for l:name in a:sources
         try
-            call s:log('notify_source_to_refresh', l:name, a:ctx)
+            call asyncomplete#log('core', 'completor()', l:name, a:ctx)
             call s:sources[l:name].completor(s:sources[l:name], a:ctx)
         catch
+            call asyncomplete#log('core', 'notify_sources_to_refresh', 'error')
             continue
         endtry
     endfor

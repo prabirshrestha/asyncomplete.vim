@@ -8,5 +8,6 @@ if get(g:, 'asyncomplete_enable_for_all', 1)
 endif
 
 let g:asyncomplete_completion_delay = get(g:, 'asyncomplete_completion_delay', 100)
+let g:asyncomplete_log_file = get(g:, 'asyncomplete_log_file', '')
 inoremap <silent> <expr> <Plug>(asyncomplete_force_refresh) (asyncomplete#menu_selected()?"\<c-y>\<c-r>=asyncomplete#force_refresh()\<CR>":"\<c-r>=asyncomplete#force_refresh()\<CR>")
 " imap <c-space> <Plug>(asyncomplete_force_refresh)
