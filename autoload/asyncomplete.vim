@@ -238,7 +238,11 @@ function! s:python_cm_refresh(ctx, force) abort
 
     for l:name in s:get_active_sources_for_buffer()
         let l:source = s:sources[l:name]
-        let l:refresh_pattern = '\k\+$'
+        if has_key(l:source, 'refresh_pattern')
+            let l:refresh_pattern = l:source['refresh_pattern']
+        else
+            let l:refresh_pattern = '\k\+$'
+        endif
         let l:matchpos = matchstrpos(l:typed, l:refresh_pattern)
         let l:startpos = l:matchpos[1]
         let l:endpos = l:matchpos[2]
