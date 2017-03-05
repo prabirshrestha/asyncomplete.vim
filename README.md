@@ -21,6 +21,12 @@ inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <cr> pumvisible() ? "\<C-y>\<cr>" : "\<cr>"
 ```
 
+### Force refresh completion
+
+```vim
+imap <c-space> <Plug>(asyncomplete_force_refresh)
+```
+
 #### Preview Window
 
 To disable preview window:
@@ -92,7 +98,16 @@ The above sample shows synchronous completion. If you would like to make it asyn
 call timer_start(2000, {timer-> asyncomplete#complete(a:opt['name'], a:ctx, l:startcol, l:matches)})
 ```
 
-As a source author you do not have to worry about synchronization issues in case the server returns the async completion after the user has typed more characters. asyncomplete.vim uses partial caching as well as ignores if the context changes when calling `asyncomplete#complete`. This is one of the core reason why the original context must be passed when calling `asyncomplete#complete`.
+If you are returning incomplete results and would like to trigger completion on the next keypress pass `1` as the fifth parameter to `asyncomplete#complete`
+which signifies the result is incomplete.
+
+```vim
+call asyncomplete#complete(a:opt['name'], a:ctx, l:startcol, l:matches, 1)
+```
+
+As a source author you do not have to worry about synchronization issues in case the server returns the async completion after the user has typed more
+characters. asyncomplete.vim uses partial caching as well as ignores if the context changes when calling `asyncomplete#complete`.
+This is one of the core reason why the original context must be passed when calling `asyncomplete#complete`.
 
 ### Credits
 All the credit goes to the following projects
