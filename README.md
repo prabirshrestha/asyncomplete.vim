@@ -1,11 +1,9 @@
-asyncomplete.vim (experimental)
-==============================
+asyncomplete.vim
+================
 
 Provide async autocompletion for vim8 and neovim with `timers`.
 This repository is fork of [https://github.com/roxma/nvim-complete-manager](https://github.com/roxma/nvim-complete-manager)
 in pure vim script with python dependency removed.
-
-**Do not depend on this repository. This is me trying out async completion in vim so I will be pushing random things that may break**
 
 ### Installing
 
