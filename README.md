@@ -66,10 +66,6 @@ function! s:js_completor(opt, ctx) abort
     let l:kw = matchstr(l:typed, '\v\S+$')
     let l:kwlen = len(l:kw)
 
-    if l:kwlen < 1
-        return
-    endif
-
     let l:startcol = l:col - l:kwlen
 
     let l:matches = [
