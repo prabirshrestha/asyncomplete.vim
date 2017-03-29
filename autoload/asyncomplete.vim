@@ -81,6 +81,10 @@ function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
 endfunction
 
 function! asyncomplete#force_refresh() abort
+    return asyncomplete#menu_selected() ? "\<c-y>\<c-r>=asyncomplete#_force_refresh()\<CR>" : "\<c-r>=asyncomplete#_force_refresh()\<CR>"
+endfunction
+
+function! asyncomplete#_force_refresh() abort
     if get(b:, 'asyncomplete_enable', 0) == 0
         return
     endif
@@ -241,6 +245,12 @@ function! s:python_cm_refresh(ctx, force) abort
     if a:force
         call s:notify_sources_to_refresh(s:get_active_sources_for_buffer(), a:ctx)
         return
+    endif
+
+    if !pumvisible()
+        if !g:asyncomplete_auto_popup
+            return
+        endif
     endif
 
     let l:typed = a:ctx['typed']
