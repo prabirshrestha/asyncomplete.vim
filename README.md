@@ -25,6 +25,32 @@ inoremap <expr> <cr> pumvisible() ? "\<C-y>\<cr>" : "\<cr>"
 imap <c-space> <Plug>(asyncomplete_force_refresh)
 ```
 
+### Auto popup
+By default asyncomplete will automatically show the autocomplete popup menu as you start typing.
+If you would like to disable the default behvior set `g:asyncomplete_auto_popup` to 0.
+
+```vim
+let g:asyncomplete_auto_popup = 0
+```
+
+You can use the above `<Plug>(asyncomplete_force_refresh)` to show the popup
+or can you tab to show the autocomplete.
+
+```vim
+let g:asyncomplete_auto_popup = 0
+
+function! s:check_back_space() abort
+    let col = col('.') - 1
+    return !col || getline('.')[col - 1]  =~ '\s'
+endfunction
+
+inoremap <silent><expr> <TAB>
+  \ pumvisible() ? "\<C-n>" :
+  \ <SID>check_back_space() ? "\<TAB>" :
+  \ asyncomplete#force_refresh()
+inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+```
+
 #### Preview Window
 
 To disable preview window:
