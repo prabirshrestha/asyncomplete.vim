@@ -210,7 +210,7 @@ function! s:get_active_sources_for_buffer() abort
         endif
 
         if l:blacklisted
-            break
+            continue
         endif
 
         if has_key(l:info, 'whitelist')
