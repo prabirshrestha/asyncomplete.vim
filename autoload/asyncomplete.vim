@@ -274,7 +274,7 @@ function! s:notify_sources_to_refresh(sources, ctx) abort
             call asyncomplete#log('core', 'completor()', l:name, a:ctx)
             call s:sources[l:name].completor(s:sources[l:name], a:ctx)
         catch
-            call asyncomplete#log('core', 'notify_sources_to_refresh', 'error')
+            call asyncomplete#log('core', 'notify_sources_to_refresh', 'error', v:exception)
             continue
         endtry
     endfor
