@@ -226,6 +226,16 @@ function! s:get_active_sources_for_buffer() abort
     return l:active_sources
 endfunction
 
+if exists('*matchstrpos')
+    function! s:matchstrpos(expr, pattern) abort
+        return matchstrpos(a:expr, a:pattern)
+    endfunction
+else
+    function! s:matchstrpos(expr, pattern) abort
+        return [matchstr(a:expr, a:pattern), match(a:expr, a:pattern), matchend(a:expr, a:pattern)]
+    endfunction
+endif
+
 function! s:python_cm_refresh(ctx, force) abort
     let l:has_popped_up = 0
     if a:force
@@ -243,7 +253,7 @@ function! s:python_cm_refresh(ctx, force) abort
         else
             let l:refresh_pattern = '\k\+$'
         endif
-        let l:matchpos = matchstrpos(l:typed, l:refresh_pattern)
+        let l:matchpos = s:matchstrpos(l:typed, l:refresh_pattern)
         let l:startpos = l:matchpos[1]
         let l:endpos = l:matchpos[2]
 
