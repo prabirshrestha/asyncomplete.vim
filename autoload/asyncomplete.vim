@@ -300,6 +300,12 @@ function! s:notify_sources_to_refresh(sources, ctx) abort
     endfor
 endfunction
 
+function! s:sort_sources_by_priority(source1, source2) abort
+    let l:priority1 = get(get(s:sources, a:source1, {}), 'priority', 0)
+    let l:priority2 = get(get(s:sources, a:source2, {}), 'priority', 0)
+    return l:priority1 > l:priority2 ? -1 : (l:priority1 != l:priority2)
+endfunction
+
 function! s:python_refresh_completions(ctx) abort
     let l:matches = []
 
@@ -319,9 +325,13 @@ function! s:python_refresh_completions(ctx) abort
     let l:base = a:ctx['typed'][l:startcol-1:]
 
     let l:tmpmatches = []
-    for [l:name, l:info] in items(s:matches)
-        let l:curstartcol = s:matches[l:name]['startcol']
-        let l:curmatches = s:matches[l:name]['matches']
+
+    let l:sources = sort(keys(s:matches), function('s:sort_sources_by_priority'))
+
+    for l:name in l:sources
+        let l:info = s:matches[l:name]
+        let l:curstartcol = l:info['startcol']
+        let l:curmatches = l:info['matches']
 
         if l:curstartcol > a:ctx['col']
             " wrong start col
