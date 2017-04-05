@@ -84,6 +84,10 @@ asyncomplete.vim deliberately does not contain any sources. Please use one of th
 * Typescript via [asyncomplete-tscompletejob.vim](https://github.com/prabirshrestha/asyncomplete-tscompletejob.vim)
 * *can't find what you are looking for? write one instead an send a PR to be included here*
 
+### Priority
+
+Use `priority` to control the order of the source. Highest priority comes first. `priority` is optional and defaults to `0` when registering a source.
+
 ### Example
 
 ```vim
@@ -110,6 +114,7 @@ endfunction
 call asyncomplete#register_source({
     \ 'name': 'javascript',
     \ 'whitelist': ['javascript'],
+    \ 'priority': 5,
     \ 'completor': function('s:js_completor'),
     \ })
 ```
