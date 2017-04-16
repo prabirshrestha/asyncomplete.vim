@@ -324,7 +324,7 @@ function! s:python_refresh_completions(ctx) abort
     let l:startcol = min(l:startcols)
     let l:base = a:ctx['typed'][l:startcol-1:]
 
-    let l:tmpmatches = []
+    let l:filtered_matches = []
 
     let l:sources = sort(keys(s:matches), function('s:sort_sources_by_priority'))
 
@@ -352,16 +352,20 @@ function! s:python_refresh_completions(ctx) abort
             let l:normalizedcurmatches += [l:e]
         endfor
 
-        let l:curmatches = l:normalizedcurmatches
-
-        for l:item in l:curmatches
-            if l:item['word'] =~ '^' . l:prefix
-                let l:tmpmatches += [l:item]
-            endif
-        endfor
+        let l:filtered_matches += s:filter_completion_items(l:prefix, l:normalizedcurmatches)
     endfor
 
-    call s:core_complete(a:ctx, l:startcol, l:tmpmatches, s:matches)
+    call s:core_complete(a:ctx, l:startcol, l:filtered_matches, s:matches)
+endfunction
+
+function! s:filter_completion_items(prefix, matches) abort
+    let l:tmpmatches = []
+    for l:item in a:matches
+        if l:item['word'] =~ '^' . a:prefix
+            let l:tmpmatches += [l:item]
+        endif
+    endfor
+    return l:tmpmatches
 endfunction
 
 function! s:python_complete(ctx, startcol, matches) abort
