@@ -13,3 +13,9 @@ let g:asyncomplete_log_file = get(g:, 'asyncomplete_log_file', '')
 
 " imap <c-space> <Plug>(asyncomplete_force_refresh)
 inoremap <silent> <expr> <Plug>(asyncomplete_force_refresh) asyncomplete#force_refresh()
+
+if has('lua')
+    lua << EOF
+    asyncomplete = {}
+EOF
+endif
