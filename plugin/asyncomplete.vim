@@ -15,7 +15,11 @@ let g:asyncomplete_log_file = get(g:, 'asyncomplete_log_file', '')
 inoremap <silent> <expr> <Plug>(asyncomplete_force_refresh) asyncomplete#force_refresh()
 
 if has('lua')
-    lua << EOF
-    asyncomplete = {}
-EOF
+    call s:init_lua()
 endif
+
+function! s:init_lua() abort
+    lua << EOF
+        asyncomplete = {}
+EOF
+endfunction

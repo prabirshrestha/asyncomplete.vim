@@ -5,6 +5,7 @@ let s:has_popped_up = 0
 let s:complete_timer_ctx = {}
 let s:already_setup = 0
 let s:script_path = expand('<sfile>:p:h')
+let s:has_lua = has('lua')
 
 function! asyncomplete#log(...) abort
     if !empty(g:asyncomplete_log_file)
@@ -418,7 +419,7 @@ EOF
 endfunction
 
 function! s:filter_completion_items(prefix, matches) abort
-    if has('lua')
+    if s:has_lua
         return s:filter_completion_items_lua(a:prefix, a:matches)
     else
         let l:tmpmatches = []
