@@ -14,12 +14,13 @@ let g:asyncomplete_log_file = get(g:, 'asyncomplete_log_file', '')
 " imap <c-space> <Plug>(asyncomplete_force_refresh)
 inoremap <silent> <expr> <Plug>(asyncomplete_force_refresh) asyncomplete#force_refresh()
 
-if has('lua')
-    call s:init_lua()
-endif
-
 function! s:init_lua() abort
     lua << EOF
         asyncomplete = {}
 EOF
 endfunction
+
+if has('lua')
+    call s:init_lua()
+endif
+
