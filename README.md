@@ -76,6 +76,7 @@ autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
 asyncomplete.vim deliberately does not contain any sources. Please use one of the following sources or create your own.
 
 * Buffer via [asyncomplete-buffer.vim](https://github.com/prabirshrestha/asyncomplete-buffer.vim)
+* Emoji via [asyncomplete-emoji.vim](https://github.com/prabirshrestha/asyncomplete-emoji.vim)
 * Vim Syntax via [asyncomplete-necosyntax.vim](https://github.com/prabirshrestha/asyncomplete-necosyntax.vim)
 * Vim via [asyncomplete-necovim.vim](https://github.com/prabirshrestha/asyncomplete-necovim.vim)
 * Go via [asyncomplete-gocode.vim](https://github.com/prabirshrestha/asyncomplete-gocode.vim)
