@@ -114,7 +114,7 @@ function! s:js_completor(opt, ctx) abort
     call asyncomplete#complete(a:opt['name'], a:ctx, l:startcol, l:matches)
 endfunction
 
-call asyncomplete#register_source({
+au User asyncomplete_setup call asyncomplete#register_source({
     \ 'name': 'javascript',
     \ 'whitelist': ['javascript'],
     \ 'priority': 5,
