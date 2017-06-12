@@ -85,6 +85,7 @@ asyncomplete.vim deliberately does not contain any sources. Please use one of th
 * JavaScript (Flow) via [asyncomplete-flow.vim](https://github.com/prabirshrestha/asyncomplete-flow.vim)
 * Typescript via [asyncomplete-tscompletejob.vim](https://github.com/prabirshrestha/asyncomplete-tscompletejob.vim)
 * vim tags via [asyncomplete-tags.vim](https://github.com/prabirshrestha/asyncomplete-tags.vim)
+* Omni via [asyncomplete-omni.vim](https://github.com/yami-beta/asyncomplete-omni.vim)
 * *can't find what you are looking for? write one instead an send a PR to be included here*
 
 ### Priority
