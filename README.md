@@ -56,7 +56,7 @@ inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 To disable preview window:
 
 ```vim
-set completeop-=preview
+set completeopt-=preview
 ```
 
 To enable preview window:
