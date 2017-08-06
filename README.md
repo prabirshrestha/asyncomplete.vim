@@ -77,21 +77,23 @@ asyncomplete.vim deliberately does not contain any sources. Please use one of th
 
 #### Language Server Protocol (LSP)
 [Language Server Protocol](https://github.com/Microsoft/language-server-protocol) via [vim-lsp](https://github.com/prabirshrestha/vim-lsp) and [asyncomplete-lsp.vim](https://github.com/prabirshrestha/asyncomplete-lsp.vim)
-    ```vim
-    Plug 'prabirshrestha/asyncomplete.vim'
-    Plug 'prabirshrestha/async.vim'
-    Plug 'prabirshrestha/vim-lsp', { 'branch': 'dev' }
-    Plug 'prabirshrestha/asyncomplete-lsp.vim'
 
-    if executable('pyls')
-        " pip install python-language-server
-        au User lsp_setup call lsp#register_server({
-            \ 'name': 'pyls',
-            \ 'cmd': {server_info->['pyls']},
-            \ 'whitelist': ['python'],
-            \ })
-    endif
-    ```
+```vim
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/async.vim'
+Plug 'prabirshrestha/vim-lsp', { 'branch': 'dev' }
+Plug 'prabirshrestha/asyncomplete-lsp.vim'
+
+if executable('pyls')
+    " pip install python-language-server
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'pyls',
+        \ 'cmd': {server_info->['pyls']},
+        \ 'whitelist': ['python'],
+        \ })
+endif
+```
+
 * Buffer via [asyncomplete-buffer.vim](https://github.com/prabirshrestha/asyncomplete-buffer.vim)
 * Emoji via [asyncomplete-emoji.vim](https://github.com/prabirshrestha/asyncomplete-emoji.vim)
 * Vim Syntax via [asyncomplete-necosyntax.vim](https://github.com/prabirshrestha/asyncomplete-necosyntax.vim)
