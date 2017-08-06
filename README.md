@@ -75,7 +75,8 @@ autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
 
 asyncomplete.vim deliberately does not contain any sources. Please use one of the following sources or create your own.
 
-#### [Language Server Protocol](https://github.com/Microsoft/language-server-protocol) via [vim-lsp](https://github.com/prabirshrestha/vim-lsp) and [asyncomplete-lsp.vim](https://github.com/prabirshrestha/asyncomplete-lsp.vim)
+#### Language Server Protocol (LSP)
+[Language Server Protocol](https://github.com/Microsoft/language-server-protocol) via [vim-lsp](https://github.com/prabirshrestha/vim-lsp) and [asyncomplete-lsp.vim](https://github.com/prabirshrestha/asyncomplete-lsp.vim)
     ```vim
     Plug 'prabirshrestha/asyncomplete.vim'
     Plug 'prabirshrestha/async.vim'
