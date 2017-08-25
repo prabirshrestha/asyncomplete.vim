@@ -81,7 +81,7 @@ asyncomplete.vim deliberately does not contain any sources. Please use one of th
 ```vim
 Plug 'prabirshrestha/asyncomplete.vim'
 Plug 'prabirshrestha/async.vim'
-Plug 'prabirshrestha/vim-lsp', { 'branch': 'dev' }
+Plug 'prabirshrestha/vim-lsp'
 Plug 'prabirshrestha/asyncomplete-lsp.vim'
 
 if executable('pyls')
