@@ -99,6 +99,7 @@ endif
 * Vim Syntax via [asyncomplete-necosyntax.vim](https://github.com/prabirshrestha/asyncomplete-necosyntax.vim)
 * Vim via [asyncomplete-necovim.vim](https://github.com/prabirshrestha/asyncomplete-necovim.vim)
 * Go via [asyncomplete-gocode.vim](https://github.com/prabirshrestha/asyncomplete-gocode.vim)
+* Racer via [asyncomplete-racer.vim](https://github.com/keremc/asyncomplete-racer.vim)
 * [Neosnippet](https://github.com/Shougo/neosnippet.vim) via [asyncomplete-neosnippet.vim](https://github.com/prabirshrestha/asyncomplete-neosnippet.vim)
 * [UltiSnips](https://github.com/SirVer/ultisnips) via [asyncomplete-ultisnips.vim](https://github.com/prabirshrestha/asyncomplete-ultisnips.vim)
 * JavaScript (Flow) via [asyncomplete-flow.vim](https://github.com/prabirshrestha/asyncomplete-flow.vim)
