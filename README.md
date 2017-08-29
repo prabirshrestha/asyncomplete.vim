@@ -11,6 +11,18 @@ in pure vim script with python dependency removed.
 Plug 'prabirshrestha/asyncomplete.vim'
 ```
 
+To enable default mappings use the following setting. This is disabled by default.
+
+```vim
+let g:asyncomplete_enable_default_mappings = 1
+```
+
+Following settings are enabled when default mappings is set to true.
+
+* Tab completion (`<tab>` to select next item, `<s-tab>` to select previous item)
+* `<cr>` to select completion item
+* `<c-space>` to force refresh completion items
+
 #### Tab completion
 
 ```vim
