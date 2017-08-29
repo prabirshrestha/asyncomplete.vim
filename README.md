@@ -94,19 +94,24 @@ if executable('pyls')
 endif
 ```
 
-* Buffer via [asyncomplete-buffer.vim](https://github.com/prabirshrestha/asyncomplete-buffer.vim)
-* Emoji via [asyncomplete-emoji.vim](https://github.com/prabirshrestha/asyncomplete-emoji.vim)
-* Vim Syntax via [asyncomplete-necosyntax.vim](https://github.com/prabirshrestha/asyncomplete-necosyntax.vim)
-* Vim via [asyncomplete-necovim.vim](https://github.com/prabirshrestha/asyncomplete-necovim.vim)
-* Go via [asyncomplete-gocode.vim](https://github.com/prabirshrestha/asyncomplete-gocode.vim)
-* Racer via [asyncomplete-racer.vim](https://github.com/keremc/asyncomplete-racer.vim)
-* [Neosnippet](https://github.com/Shougo/neosnippet.vim) via [asyncomplete-neosnippet.vim](https://github.com/prabirshrestha/asyncomplete-neosnippet.vim)
-* [UltiSnips](https://github.com/SirVer/ultisnips) via [asyncomplete-ultisnips.vim](https://github.com/prabirshrestha/asyncomplete-ultisnips.vim)
-* JavaScript (Flow) via [asyncomplete-flow.vim](https://github.com/prabirshrestha/asyncomplete-flow.vim)
-* Typescript via [asyncomplete-tscompletejob.vim](https://github.com/prabirshrestha/asyncomplete-tscompletejob.vim)
-* vim tags via [asyncomplete-tags.vim](https://github.com/prabirshrestha/asyncomplete-tags.vim)
-* Omni via [asyncomplete-omni.vim](https://github.com/yami-beta/asyncomplete-omni.vim)
-* *can't find what you are looking for? write one instead an send a PR to be included here*
+*in alphabetical order*
+
+| Languages/FileType/Source | Links |
+|---|---|
+| Buffer | [asyncomplete-buffer.vim](https://github.com/prabirshrestha/asyncomplete-buffer.vim)
+| Emoji | [asyncomplete-emoji.vim](https://github.com/prabirshrestha/asyncomplete-emoji.vim)
+| Go | [asyncomplete-gocode.vim](https://github.com/prabirshrestha/asyncomplete-gocode.vim)
+| JavaScript (Flow) | [asyncomplete-flow.vim](https://github.com/prabirshrestha/asyncomplete-flow.vim)
+| Omni | [asyncomplete-omni.vim](https://github.com/yami-beta/asyncomplete-omni.vim)
+| Racer | [asyncomplete-racer.vim](https://github.com/keremc/asyncomplete-racer.vim)
+| Typescript | [asyncomplete-tscompletejob.vim](https://github.com/prabirshrestha/asyncomplete-tscompletejob.vim)
+| Vim Syntax | [asyncomplete-necosyntax.vim](https://github.com/prabirshrestha/asyncomplete-necosyntax.vim)
+| Vim | [asyncomplete-necovim.vim](https://github.com/prabirshrestha/asyncomplete-necovim.vim)
+| [Neosnippet](https://github.com/Shougo/neosnippet.vim) | [asyncomplete-neosnippet.vim](https://github.com/prabirshrestha/asyncomplete-neosnippet.vim)
+| [UltiSnips](https://github.com/SirVer/ultisnips) | [asyncomplete-ultisnips.vim](https://github.com/prabirshrestha/asyncomplete-ultisnips.vim)
+| vim tags | [asyncomplete-tags.vim](https://github.com/prabirshrestha/asyncomplete-tags.vim)
+
+*can't find what you are looking for? write one instead an send a PR to be included here*
 
 ### Priority
 
