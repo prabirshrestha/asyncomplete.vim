@@ -1,0 +1,45 @@
+*asyncomplete.vim.txt*  Async autocompletion for Vim 8 and Neovim.
+*asyncomplete*
+
+
+===============================================================================
+CONTENTS                                                *asyncomplete-contents*
+
+    1. Introduction        |asyncomplete-introduction|
+    2. Options             |asyncomplete-options|
+
+
+===============================================================================
+1. Introduction                                     *asyncomplete-introduction*
+
+Async autocompletion for Vim 8 and Neovim with |timers|.
+
+This is a fork of https://github.com/roxma/nvim-complete-manager in pure Vim
+script with the Python dependency removed.
+
+
+===============================================================================
+2. Options                                               *asyncomplete-options*
+
+
+g:asyncomplete_remove_duplicates             *g:asyncomplete_remove_duplicates*
+
+    Type: |Number|
+    Default: `0`
+
+    Remove duplicates from the completion list keeping the match from the
+    source with the highest priority. Set to `1` to enable.
+
+    Note that this might be slow if you have large and/or many sources!
+
+
+g:asyncomplete_auto_popup                           *g:asyncomplete_auto_popup*
+
+    Type: |Number|
+    Default: `1`
+
+    Automatically show the autocomplete popup menu as you start typing.
+
+
+===============================================================================
+  vim:tw=78:ts=4:sts=4:sw=4:ft=help:norl:
