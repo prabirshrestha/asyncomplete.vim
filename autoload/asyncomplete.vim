@@ -328,6 +328,10 @@ function! s:python_refresh_completions(ctx) abort
 
     let l:sources = sort(keys(s:matches), function('s:sort_sources_by_priority'))
 
+    if g:asyncomplete_remove_duplicates == 1
+        let l:sources = filter(copy(l:sources), 'index(l:sources, v:val, v:key+1) == -1')
+    endif
+
     for l:name in l:sources
         let l:info = s:matches[l:name]
         let l:curstartcol = l:info['startcol']
