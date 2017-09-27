@@ -51,6 +51,16 @@ inoremap <silent><expr> <TAB>
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 ```
 
+### Remove duplicates
+
+If you have many sources enabled (especially the buffer source), it might be
+useful to remove duplicates from the completion list. You can enable this by
+setting `g:asyncomplete_remove_duplicates` to 1.
+
+```vim
+let g:asyncomplete_remove_duplicates = 1
+```
+
 #### Preview Window
 
 To disable preview window:
