@@ -15,6 +15,18 @@ endfunction
 autocmd User asyncomplete_setup silent
 
 function! asyncomplete#enable_for_buffer() abort
+    if !has('timers')
+        echohl ErrorMsg
+        echomsg 'Vim/Neovim compiled with timers required for asyncomplete.vim.'
+        echohl NONE
+        if has('nvim')
+            call asyncomplete#log('neovim compiled with timers required.')
+        else
+            call asyncomplete#log('vim compiled with timers required.')
+        endif
+        return
+    endif
+
     if s:already_setup == 0
         doautocmd User asyncomplete_setup
         let s:already_setup = 1
