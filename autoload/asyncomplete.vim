@@ -85,7 +85,9 @@ function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
 
     " ignore the request if context has changed
     if asyncomplete#context_changed(a:ctx)
-        call s:python_cm_complete(a:name, a:ctx, a:startcol, a:matches, l:refresh, 1)
+        if g:asyncomplete_force_refresh_on_context_changed
+            call s:python_cm_complete(a:name, a:ctx, a:startcol, a:matches, l:refresh, 1)
+        endif
         return 1
     endif
 
