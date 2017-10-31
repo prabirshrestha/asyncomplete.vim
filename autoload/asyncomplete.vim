@@ -51,6 +51,18 @@ function! asyncomplete#register_source(info) abort
         return
     endif
 
+    try
+        let l:opts = call('asyncomplete#sources#'.a:info['name'].'#get_source_options', [a:info])
+        cal extend(a:info, l:opts)
+    catch
+    endtry
+    if !has_key(a:info, 'whitelist')
+        let a:info['whitelist'] = ['*']
+    endif
+    if !has_key(a:info, 'completor')
+        let a:info['completor'] = function('asyncomplete#sources#'.a:info['name'].'#completor')
+    endif
+
     if has_key(a:info, 'events') && has_key(a:info, 'on_event')
         execute 'augroup asyncomplete_source_event_' . a:info['name']
         for l:event in a:info['events']
