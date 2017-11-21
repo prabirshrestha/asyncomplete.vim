@@ -125,6 +125,22 @@ endif
 
 *can't find what you are looking for? write one instead an send a PR to be included here*
 
+#### Using existing vim plugin sources
+
+Rather than writing your own completion source from scratch you could also suggests other plugin authors to provide a async completion api that works for asyncomplete.vim or any other async autocomplete libraries without taking a dependency on asyncomplete.vim. The plugin can provide a function that takes a callback which returns the list of candidates and the startcol from where it must show the popup. Candidates can be list of words or vim's `complete-items`.
+
+```vim
+function s:completor(opt, ctx)
+  call mylanguage#get_async_completions({candidates, startcol -> asyncomplete#complete(a:opt['name'], a:ctx, startcol, candidates) })
+endfunction
+
+call asyncomplete#register_source({
+    \ 'name': 'mylanguage',
+    \ 'whitelist': [*],
+    \ 'completor': function('s:completor'),
+    \ })
+```
+
 ### Priority
 
 Use `priority` to control the order of the source. Highest priority comes first. `priority` is optional and defaults to `0` when registering a source.
