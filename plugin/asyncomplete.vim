@@ -4,7 +4,10 @@ endif
 let g:asyncomplete_loaded = 1
 
 if get(g:, 'asyncomplete_enable_for_all', 1)
-    au BufEnter * if exists ('b:asyncomplete_enable') == 0 | call asyncomplete#enable_for_buffer() | endif
+    augroup asyncomplete_enable
+        au!
+        au BufEnter * if exists('b:asyncomplete_enable') == 0 | call asyncomplete#enable_for_buffer() | endif
+    augroup END
 endif
 
 let g:asyncomplete_auto_popup = get(g:, 'asyncomplete_auto_popup', 1)
