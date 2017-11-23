@@ -124,7 +124,7 @@ endif
 | Vim tags | [asyncomplete-tags.vim](https://github.com/prabirshrestha/asyncomplete-tags.vim)
 | Vim | [asyncomplete-necovim.vim](https://github.com/prabirshrestha/asyncomplete-necovim.vim)
 
-*can't find what you are looking for? write one instead an send a PR to be included here*
+*can't find what you are looking for? write one instead an send a PR to be included here or search github topics tagged with asyncomplete at https://github.com/topics/asyncomplete.*
 
 #### Using existing vim plugin sources
 
