@@ -118,6 +118,7 @@ endif
 | Omni | [asyncomplete-omni.vim](https://github.com/yami-beta/asyncomplete-omni.vim)
 | PivotalTracker stories | [asyncomplete-pivotaltracker.vim](https://github.com/hauleth/asyncomplete-pivotaltracker.vim)
 | Racer | [asyncomplete-racer.vim](https://github.com/keremc/asyncomplete-racer.vim)
+| [tmux complete](https://github.com/wellle/tmux-complete.vim) | [tmux-complete.vim](https://github.com/wellle/tmux-complete.vim)
 | Typescript | [asyncomplete-tscompletejob.vim](https://github.com/prabirshrestha/asyncomplete-tscompletejob.vim)
 | [UltiSnips](https://github.com/SirVer/ultisnips) | [asyncomplete-ultisnips.vim](https://github.com/prabirshrestha/asyncomplete-ultisnips.vim)
 | Vim Syntax | [asyncomplete-necosyntax.vim](https://github.com/prabirshrestha/asyncomplete-necosyntax.vim)
