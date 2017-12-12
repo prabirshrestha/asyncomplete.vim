@@ -213,8 +213,13 @@ function! s:python_cm_complete_timeout(srcs, ctx) abort
 endfunction
 
 function! s:get_active_sources_for_buffer() abort
-    " TODO: cache active sources per buffer
-    let l:active_sources = []
+    if exists('b:asyncomplete_active_sources')
+        " active sources were cached for buffer
+        return b:asyncomplete_active_sources
+    endif
+
+    " get and cache active sources per buffer
+    let b:asyncomplete_active_sources = []
     for [l:name, l:info] in items(s:sources)
         let l:blacklisted = 0
 
@@ -234,14 +239,14 @@ function! s:get_active_sources_for_buffer() abort
         if has_key(l:info, 'whitelist')
             for l:filetype in l:info['whitelist']
                 if l:filetype == &filetype || l:filetype == '*'
-                    let l:active_sources += [l:name]
+                    let b:asyncomplete_active_sources += [l:name]
                     break
                 endif
             endfor
         endif
     endfor
 
-    return l:active_sources
+    return b:asyncomplete_active_sources
 endfunction
 
 if exists('*matchstrpos')
