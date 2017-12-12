@@ -1,3 +1,15 @@
+if !has('timers')
+    echohl ErrorMsg
+    echomsg 'Vim/Neovim compiled with timers required for asyncomplete.vim.'
+    echohl NONE
+    if has('nvim')
+        call asyncomplete#log('neovim compiled with timers required.')
+    else
+        call asyncomplete#log('vim compiled with timers required.')
+    endif
+    finish
+endif
+
 let s:sources = {}
 let s:change_timer = -1
 let s:last_tick = []
@@ -12,22 +24,13 @@ function! asyncomplete#log(...) abort
 endfunction
 
 " do nothing, place it here only to avoid the message
-autocmd User asyncomplete_setup silent
+augroup asyncomplete_silence_messages
+    au!
+    autocmd User asyncomplete_setup silent
+augroup END
 
 function! asyncomplete#enable_for_buffer() abort
-    if !has('timers')
-        echohl ErrorMsg
-        echomsg 'Vim/Neovim compiled with timers required for asyncomplete.vim.'
-        echohl NONE
-        if has('nvim')
-            call asyncomplete#log('neovim compiled with timers required.')
-        else
-            call asyncomplete#log('vim compiled with timers required.')
-        endif
-        return
-    endif
-
-    if s:already_setup == 0
+    if !s:already_setup
         doautocmd User asyncomplete_setup
         let s:already_setup = 1
     endif
@@ -57,7 +60,7 @@ function! asyncomplete#register_source(info) abort
             let l:exec =  'if get(b:,"asyncomplete_enable",0) | call s:python_cm_event("' . a:info['name'] . '", "'.l:event.'",asyncomplete#context()) | endif'
             if type(l:event) == type('')
                 execute 'au ' . l:event . ' * ' . l:exec
-            elseif type(l:event) == v:t_list
+            elseif type(l:event) == type([])
                 execute 'au ' . join(l:event,' ') .' ' .  l:exec
             endif
         endfor
@@ -78,10 +81,7 @@ function! asyncomplete#unregister_source(name) abort
 endfunction
 
 function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
-    let l:refresh = 0
-    if len(a:000) > 0
-        let l:refresh = a:1
-    endif
+    let l:refresh = a:0 > 0 ? a:1 : 0
 
     " ignore the request if context has changed
     if asyncomplete#context_changed(a:ctx)
@@ -99,10 +99,9 @@ function! asyncomplete#force_refresh() abort
 endfunction
 
 function! asyncomplete#_force_refresh() abort
-    if get(b:, 'asyncomplete_enable', 0) == 0
-        return
+    if get(b:, 'asyncomplete_enable')
+        call s:python_cm_refresh(asyncomplete#context(), 1)
     endif
-    call s:python_cm_refresh(asyncomplete#context(), 1)
     return ''
 endfunction
 
@@ -112,16 +111,11 @@ function! asyncomplete#context() abort
     let l:ret['col'] = l:ret['curpos'][2]
     let l:ret['filetype'] = &filetype
     let l:ret['filepath'] = expand('%:p')
-    if l:ret['filepath'] == ''
-        " this is necessary here, otherwise empty filepath is somehow
-        " converted to None in vim's python binding.
-        let l:ret['filepath'] = ""
-    endif
     let l:ret['typed'] = strpart(getline(l:ret['lnum']),0,l:ret['col']-1)
     return l:ret
 endfunction
 
-function! asyncomplete#context_changed(ctx)
+function! asyncomplete#context_changed(ctx) abort
     " return (b:changedtick!=a:ctx['changedtick']) || (getcurpos()!=a:ctx['curpos'])
     " Note: changedtick is triggered when `<c-x><c-u>` is pressed due to vim's
     " bug, use curpos as workaround
@@ -156,7 +150,7 @@ function! s:change_tick_stop() abort
 endfunction
 
 function! s:on_changed() abort
-    if get(b:, 'asyncomplete_enable', 0) == 0 || mode() != 'i' || &paste != 0
+    if !get(b:, 'asyncomplete_enable') || mode() isnot# 'i' || &paste
         return
     endif
 
@@ -184,7 +178,7 @@ endfunction
 
 function! s:python_cm_complete(name, ctx, startcol, matches, refresh, outdated) abort
     call asyncomplete#log('core', 's:python_cm_complete', a:name, a:ctx, a:startcol, a:refresh, a:outdated)
-    if (a:outdated)
+    if a:outdated
         call s:notify_sources_to_refresh([a:name], asyncomplete#context())
         return
     endif
@@ -200,7 +194,7 @@ function! s:python_cm_complete(name, ctx, startcol, matches, refresh, outdated) 
         let s:matches[a:name]['refresh'] = a:refresh
     endif
 
-    if s:has_popped_up == 1
+    if s:has_popped_up
         call s:python_refresh_completions(asyncomplete#context())
     endif
 endfunction
@@ -225,7 +219,7 @@ function! s:get_active_sources_for_buffer() abort
 
         if has_key(l:info, 'blacklist')
             for l:filetype in l:info['blacklist']
-                if l:filetype == &filetype || l:filetype == '*'
+                if l:filetype == &filetype || l:filetype is# '*'
                     let l:blacklisted = 1
                     break
                 endif
@@ -238,7 +232,7 @@ function! s:get_active_sources_for_buffer() abort
 
         if has_key(l:info, 'whitelist')
             for l:filetype in l:info['whitelist']
-                if l:filetype == &filetype || l:filetype == '*'
+                if l:filetype == &filetype || l:filetype is# '*'
                     let b:asyncomplete_active_sources += [l:name]
                     break
                 endif
@@ -266,10 +260,8 @@ function! s:python_cm_refresh(ctx, force) abort
         return
     endif
 
-    if !pumvisible()
-        if !g:asyncomplete_auto_popup
-            return
-        endif
+    if !pumvisible() && !g:asyncomplete_auto_popup
+        return
     endif
 
     let l:typed = a:ctx['typed']
@@ -347,7 +339,7 @@ function! s:python_refresh_completions(ctx) abort
 
     let l:sources = sort(keys(s:matches), function('s:sort_sources_by_priority'))
 
-    if g:asyncomplete_remove_duplicates == 1
+    if g:asyncomplete_remove_duplicates
         let l:sources = filter(copy(l:sources), 'index(l:sources, v:val, v:key+1) == -1')
     endif
 
@@ -408,12 +400,12 @@ function! s:python_cm_event(name, event, ctx) abort
 endfunction
 
 function! s:core_complete(ctx, startcol, matches, allmatches) abort
-    if get(b:, 'asyncomplete_enable', 0) == 0
+    if !get(b:, 'asyncomplete_enable', 0)
         return 2
     endif
 
     " ignore the request if context has changed
-    if (a:ctx != asyncomplete#context()) || (mode() != 'i')
+    if (a:ctx != asyncomplete#context()) || (mode() isnot# 'i')
         return 1
     endif
 
@@ -432,16 +424,16 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
     call complete(a:startcol, a:matches)
 endfunction
 
-function! s:complete_timeout(timer)
+function! s:complete_timeout(timer) abort
     " finished, clean variable
-    unlet s:complete_timer
+    unlet! s:complete_timer
     if s:complete_timer_ctx != asyncomplete#context()
         return
     endif
     call s:python_cm_complete_timeout(s:sources, s:complete_timer_ctx)
 endfunction
 
-function! asyncomplete#menu_selected()
+function! asyncomplete#menu_selected() abort
     " when the popup menu is visible, v:completed_item will be the
     " current_selected item
     " if v:completed_item is empty, no item is selected

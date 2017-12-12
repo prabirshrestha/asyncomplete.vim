@@ -108,22 +108,44 @@ endif
 
 *in alphabetical order*
 
-| Languages/FileType/Source | Links |
-|---|---|
-| Buffer | [asyncomplete-buffer.vim](https://github.com/prabirshrestha/asyncomplete-buffer.vim)
-| Emoji | [asyncomplete-emoji.vim](https://github.com/prabirshrestha/asyncomplete-emoji.vim)
-| Go | [asyncomplete-gocode.vim](https://github.com/prabirshrestha/asyncomplete-gocode.vim)
-| JavaScript (Flow) | [asyncomplete-flow.vim](https://github.com/prabirshrestha/asyncomplete-flow.vim)
-| Omni | [asyncomplete-omni.vim](https://github.com/yami-beta/asyncomplete-omni.vim)
-| Racer | [asyncomplete-racer.vim](https://github.com/keremc/asyncomplete-racer.vim)
-| Typescript | [asyncomplete-tscompletejob.vim](https://github.com/prabirshrestha/asyncomplete-tscompletejob.vim)
-| Vim Syntax | [asyncomplete-necosyntax.vim](https://github.com/prabirshrestha/asyncomplete-necosyntax.vim)
-| Vim | [asyncomplete-necovim.vim](https://github.com/prabirshrestha/asyncomplete-necovim.vim)
-| [Neosnippet](https://github.com/Shougo/neosnippet.vim) | [asyncomplete-neosnippet.vim](https://github.com/prabirshrestha/asyncomplete-neosnippet.vim)
-| [UltiSnips](https://github.com/SirVer/ultisnips) | [asyncomplete-ultisnips.vim](https://github.com/prabirshrestha/asyncomplete-ultisnips.vim)
-| vim tags | [asyncomplete-tags.vim](https://github.com/prabirshrestha/asyncomplete-tags.vim)
+| Languages/FileType/Source     | Links                                                                                              |
+|-------------------------------|----------------------------------------------------------------------------------------------------|
+| Buffer                        | [asyncomplete-buffer.vim](https://github.com/prabirshrestha/asyncomplete-buffer.vim)               |
+| Emoji                         | [asyncomplete-emoji.vim](https://github.com/prabirshrestha/asyncomplete-emoji.vim)                 |
+| Go                            | [asyncomplete-gocode.vim](https://github.com/prabirshrestha/asyncomplete-gocode.vim)               |
+| JavaScript (Flow)             | [asyncomplete-flow.vim](https://github.com/prabirshrestha/asyncomplete-flow.vim)                   |
+| [Neosnippet][neosnippet]      | [asyncomplete-neosnippet.vim](https://github.com/prabirshrestha/asyncomplete-neosnippet.vim)       |
+| Omni                          | [asyncomplete-omni.vim](https://github.com/yami-beta/asyncomplete-omni.vim)                        |
+| PivotalTracker stories        | [asyncomplete-pivotaltracker.vim](https://github.com/hauleth/asyncomplete-pivotaltracker.vim)      |
+| Racer                         | [asyncomplete-racer.vim](https://github.com/keremc/asyncomplete-racer.vim)                         |
+| [tmux complete][tmuxcomplete] | [tmux-complete.vim][tmuxcomplete]                                                                  |
+| Typescript                    | [asyncomplete-tscompletejob.vim](https://github.com/prabirshrestha/asyncomplete-tscompletejob.vim) |
+| [UltiSnips][ultisnips]        | [asyncomplete-ultisnips.vim](https://github.com/prabirshrestha/asyncomplete-ultisnips.vim)         |
+| Vim Syntax                    | [asyncomplete-necosyntax.vim](https://github.com/prabirshrestha/asyncomplete-necosyntax.vim)       |
+| Vim tags                      | [asyncomplete-tags.vim](https://github.com/prabirshrestha/asyncomplete-tags.vim)                   |
+| Vim                           | [asyncomplete-necovim.vim](https://github.com/prabirshrestha/asyncomplete-necovim.vim)             |
 
-*can't find what you are looking for? write one instead an send a PR to be included here*
+[neosnippet]:   https://github.com/Shougo/neosnippet.vim
+[tmuxcomplete]: https://github.com/wellle/tmux-complete.vim
+[ultisnips]:    https://github.com/SirVer/ultisnips
+
+*can't find what you are looking for? write one instead an send a PR to be included here or search github topics tagged with asyncomplete at https://github.com/topics/asyncomplete.*
+
+#### Using existing vim plugin sources
+
+Rather than writing your own completion source from scratch you could also suggests other plugin authors to provide a async completion api that works for asyncomplete.vim or any other async autocomplete libraries without taking a dependency on asyncomplete.vim. The plugin can provide a function that takes a callback which returns the list of candidates and the startcol from where it must show the popup. Candidates can be list of words or vim's `complete-items`.
+
+```vim
+function s:completor(opt, ctx)
+  call mylanguage#get_async_completions({candidates, startcol -> asyncomplete#complete(a:opt['name'], a:ctx, startcol, candidates) })
+endfunction
+
+call asyncomplete#register_source({
+    \ 'name': 'mylanguage',
+    \ 'whitelist': [*],
+    \ 'completor': function('s:completor'),
+    \ })
+```
 
 ### Priority
 
