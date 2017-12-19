@@ -1,7 +1,7 @@
 asyncomplete.vim
 ================
 
-Provide async autocompletion for vim8 and neovim (0.2.0+) with `timers`.
+Provide async autocompletion for vim8 and neovim with `timers`.
 This repository is fork of [https://github.com/roxma/nvim-complete-manager](https://github.com/roxma/nvim-complete-manager)
 in pure vim script with python dependency removed.
 
@@ -105,6 +105,8 @@ endif
 ```
 
 **Refer to [vim-lsp wiki](https://github.com/prabirshrestha/vim-lsp/wiki/Servers) for configuring other language servers.** Besides auto-complete language server support other features such as go to definition, find references, renaming symbols, document symbols, find workspace symbols, formatting and so on.
+
+**Please note** that setup for certain LSP servers requires support for v0.2.0+ of neovim.
 
 *in alphabetical order*
 
