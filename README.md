@@ -112,6 +112,7 @@ endif
 |-------------------------------|----------------------------------------------------------------------------------------------------|
 | Buffer                        | [asyncomplete-buffer.vim](https://github.com/prabirshrestha/asyncomplete-buffer.vim)               |
 | Emoji                         | [asyncomplete-emoji.vim](https://github.com/prabirshrestha/asyncomplete-emoji.vim)                 |
+| Filenames / directories       | [asyncomplete-file.vim](https://github.com/prabirshrestha/asyncomplete-file.vim)                 |
 | Go                            | [asyncomplete-gocode.vim](https://github.com/prabirshrestha/asyncomplete-gocode.vim)               |
 | JavaScript (Flow)             | [asyncomplete-flow.vim](https://github.com/prabirshrestha/asyncomplete-flow.vim)                   |
 | [Neosnippet][neosnippet]      | [asyncomplete-neosnippet.vim](https://github.com/prabirshrestha/asyncomplete-neosnippet.vim)       |
