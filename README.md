@@ -106,7 +106,7 @@ endif
 
 **Refer to [vim-lsp wiki](https://github.com/prabirshrestha/vim-lsp/wiki/Servers) for configuring other language servers.** Besides auto-complete language server support other features such as go to definition, find references, renaming symbols, document symbols, find workspace symbols, formatting and so on.
 
-**Please note** that setup for certain LSP servers requires support for v0.2.0+ of neovim.
+**Please note** that vim-lsp setup for certain LSP servers requires support for v0.2.0+ of neovim.
 
 *in alphabetical order*
 
