@@ -54,8 +54,6 @@ function! asyncomplete#register_source(info) abort
         return
     endif
 
-    call s:clear_active_sources_cache()
-
     if has_key(a:info, 'events') && has_key(a:info, 'on_event')
         execute 'augroup asyncomplete_source_event_' . a:info['name']
         for l:event in a:info['events']
@@ -74,7 +72,6 @@ endfunction
 
 function! asyncomplete#unregister_source(name) abort
     try
-        call s:clear_active_sources_cache()
         let l:info = s:sources[a:name]
         unlet l:info
         unlet s:sources[a:name]
@@ -210,13 +207,8 @@ function! s:python_cm_complete_timeout(srcs, ctx) abort
 endfunction
 
 function! s:get_active_sources_for_buffer() abort
-    if exists('b:asyncomplete_active_sources')
-        " active sources were cached for buffer
-        return b:asyncomplete_active_sources
-    endif
-
-    " get and cache active sources per buffer
-    let b:asyncomplete_active_sources = []
+    " TODO: cache active sources per buffer
+    let l:active_sources = []
     for [l:name, l:info] in items(s:sources)
         let l:blacklisted = 0
 
@@ -236,14 +228,14 @@ function! s:get_active_sources_for_buffer() abort
         if has_key(l:info, 'whitelist')
             for l:filetype in l:info['whitelist']
                 if l:filetype == &filetype || l:filetype is# '*'
-                    let b:asyncomplete_active_sources += [l:name]
+                    let l:active_sources += [l:name]
                     break
                 endif
             endfor
         endif
     endfor
 
-    return b:asyncomplete_active_sources
+    return l:active_sources
 endfunction
 
 if exists('*matchstrpos')
@@ -441,13 +433,4 @@ function! asyncomplete#menu_selected() abort
     " current_selected item
     " if v:completed_item is empty, no item is selected
     return pumvisible() && !empty(v:completed_item)
-endfunction
-
-function! s:clear_active_sources_cache() abort
-    " remove cached sources from each buffer
-    for l:buf in getbufinfo()
-        if has_key(l:buf['variables'], 'asyncomplete_active_sources')
-            unlet l:buf['variables']['asyncomplete_active_sources']
-        endif
-    endfor
 endfunction
