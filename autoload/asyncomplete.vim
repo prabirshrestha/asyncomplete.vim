@@ -158,6 +158,12 @@ function! s:notify_sources_to_refresh(ctx, force) abort
         return
     endif
 
+    if !pumvisible() && !g:asyncomplete_auto_popup
+        if !a:force
+            return
+        endif
+    endif
+
     let l:typed = a:ctx['typed']
 
     for l:source_name in s:get_active_sources_for_buffer()
