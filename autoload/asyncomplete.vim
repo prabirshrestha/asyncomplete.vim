@@ -6,17 +6,11 @@ if !has('timers')
     finish
 endif
 
-if !exists('##TextChangedP')
-    echohl ErrorMsg
-    echomsg 'Vim/Neovim compiled with TextChangedP (vim-patch:8.0.1494) required for asyncomplete.vim.'
-    echohl NONE
-    call asyncomplete#log('vim/neovim compiled with TextChangedP (vim-patch:8.0.1494) required.')
-    finish
-endif
-
 let s:sources = {}
 let s:matches = {}
 let s:already_setup = 0
+let s:change_timer = -1
+let s:last_tick = []
 let s:startcol = -1
 let s:candidates = []
 let s:script_path = expand('<sfile>:p:h')
@@ -49,6 +43,19 @@ function! asyncomplete#enable_for_buffer() abort
             autocmd TextChangedI <buffer> call s:on_text_changed()
             autocmd TextChangedP <buffer> call s:on_text_changed()
         augroup END
+    else
+        augroup ayncomplete
+            autocmd! * <buffer>
+            autocmd InsertEnter <buffer> call s:on_insert_enter()
+            autocmd InsertLeave <buffer> call s:on_insert_leave()
+            autocmd InsertEnter <buffer> call s:change_tick_start()
+            autocmd InsertLeave <buffer> call s:change_tick_stop()
+            " working together with timer, the timer is for detecting changes
+            " popup menu is visible. TextChangedI will not be triggered when popup
+            " menu is visible, but TextChangedI is more efficient and faster than
+            " timer when popup menu is not visible.
+            autocmd TextChangedI <buffer> call s:check_changes()
+        augroup END
     endif
 endfunction
 
@@ -73,6 +80,38 @@ function! s:on_text_changed() abort
         " TODO: delay s:update_pum() since it is expensive due to filtering candidates
         call s:update_pum(l:ctx, s:startcol, s:candidates)
     endif
+endfunction
+
+function! s:change_tick() abort
+    return [b:changedtick, getcurpos()]
+endfunction
+
+function! s:change_tick_start() abort
+    if s:change_timer != -1
+        return
+    endif
+    let s:last_tick = s:change_tick()
+    " changes every 30ms, which is 0.03s, it should be fast enough
+    let s:change_timer = timer_start(30, function('s:check_changes'), { 'repeat': -1 })
+    call s:on_changed()
+endfunction
+
+function! s:check_changes(...) abort
+    let l:tick = s:change_tick()
+    if l:tick != s:last_tick
+        let s:last_tick = l:tick
+        call s:on_changed()
+    endif
+endfunction
+
+function! s:on_changed() abort
+    if exists('s:complete_timer')
+        call timer_stop(s:complete_timer)
+        unlet s:complete_timer
+    endif
+
+    let l:ctx = asyncomplete#context()
+    call s:notify_sources_to_refresh(l:ctx, 0)
 endfunction
 
 function! asyncomplete#register_source(info) abort
