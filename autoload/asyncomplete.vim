@@ -96,6 +96,15 @@ function! s:change_tick_start() abort
     call s:on_changed()
 endfunction
 
+function! s:change_tick_stop() abort
+    if s:change_timer == -1
+        return
+    endif
+    call timer_stop(s:change_timer)
+    let s:last_tick = []
+    let s:change_timer = -1
+endfunction
+
 function! s:check_changes(...) abort
     let l:tick = s:change_tick()
     if l:tick != s:last_tick
