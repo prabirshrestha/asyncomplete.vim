@@ -225,7 +225,7 @@ function! asyncomplete#complete(name, ctx, startcol, candidates, ...) abort
     let s:matches[a:name] = {
         \ 'startcol': a:startcol,
         \ 'incomplete': l:incomplete,
-        \ 'candidates': a:candidates,
+        \ 'candidates': s:normalize_candidates(a:name, a:candidates),
         \ 'ctx': a:ctx,
         \ }
 
@@ -235,6 +235,35 @@ function! asyncomplete#complete(name, ctx, startcol, candidates, ...) abort
         unlet s:compute_timer_candidate
     endif
     let s:compute_timer_candidate = timer_start(0, function('s:compute_candidates'))
+endfunction
+
+function! s:normalize_candidates(name, candidates) abort
+    let l:normalizedcurcandidates = []
+    if get(s:sources[a:name], 'normalize_completion_items', g:asyncomplete_normalize_completion_items)
+        call asyncomplete#log('s:normalize_candidates', 'normalizing all candidates', a:name)
+        for l:item in a:candidates
+            let l:e = {}
+            if type(l:item) == type('')
+                let l:e['word'] = l:item
+            else
+                let l:e = copy(l:item)
+            endif
+            let l:normalizedcurcandidates += [l:e]
+        endfor
+    else
+        if !empty(a:candidates)
+            if type(a:candidates[0]) == type('')
+                call asyncomplete#log('s:normalize_candidates', 'normalizing string candidates', a:name)
+                for l:item in a:candidates
+                    let l:normalizedcurcandidates += { 'word': l:item }
+                endfor
+            else
+                call asyncomplete#log('s:normalize_candidates', 'ignoring candidates normalization', a:name)
+                let l:normalizedcurcandidates = a:candidates
+            endif
+        endif
+    endif
+    return l:normalizedcurcandidates
 endfunction
 
 function! s:compute_candidates(...) abort
@@ -268,26 +297,13 @@ function! s:compute_candidates(...) abort
     for l:name in l:sources
         let l:info = s:matches[l:name]
         let l:curstartcol = l:info['startcol']
-        let l:curcandidates = l:info['candidates']
 
         if l:curstartcol > l:ctx['col']
             " wrong start col
             continue
         endif
 
-        let l:normalizedcurcandidates = []
-        for l:item in l:curcandidates
-            let l:e = {}
-            if type(l:item) == type('')
-                let l:e['word'] = l:item
-            else
-                let l:e = copy(l:item)
-                let l:e['word'] = l:e['word']
-            endif
-            let l:normalizedcurcandidates += [l:e]
-        endfor
-
-        let l:candidates += l:normalizedcurcandidates
+        let l:candidates += l:info['candidates']
     endfor
 
     let s:startcol = l:startcol

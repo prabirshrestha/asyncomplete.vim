@@ -17,6 +17,7 @@ let g:asyncomplete_log_file = get(g:, 'asyncomplete_log_file', '')
 let g:asyncomplete_remove_duplicates = get(g:, 'asyncomplete_remove_duplicates', 0)
 let g:asyncomplete_smart_completion = get(g:, 'asyncomplete_smart_completion', has('lua') && exists('##TextChangedP'))
 let g:asyncomplete_default_refresh_pattern = get(g:, 'asyncomplete_default_refresh_pattern', '\(\k\+$\|\.$\|:$\)')
+let g:asyncomplete_normalize_completion_items = get(g:, 'asyncomplete_normalize_completion_items', 0)
 
 " Setting it to true may slow/hang vim especially on slow are sources such as asyncomplete-lsp.vim
 " use asyncomplete_force_refersh to retrive the latest autocomplete results instead.
