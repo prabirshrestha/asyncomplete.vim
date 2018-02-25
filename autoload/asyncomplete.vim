@@ -248,14 +248,14 @@ function! s:normalize_candidates(name, candidates) abort
             else
                 let l:e = copy(l:item)
             endif
-            let l:normalizedcurcandidates += [l:e]
+            call add(l:normalizedcurcandidates, l:e)
         endfor
     else
         if !empty(a:candidates)
             if type(a:candidates[0]) == type('')
                 call asyncomplete#log('s:normalize_candidates', 'normalizing string candidates', a:name)
                 for l:item in a:candidates
-                    let l:normalizedcurcandidates += { 'word': l:item }
+                    call add(l:normalizedcurcandidates, { 'word': l:item })
                 endfor
             else
                 call asyncomplete#log('s:normalize_candidates', 'ignoring candidates normalization', a:name)
