@@ -177,43 +177,85 @@ function! s:notify_sources_to_refresh(ctx, force) abort
 
     for l:source_name in s:get_active_sources_for_buffer()
         let l:refresh = a:force
+        let l:source = s:sources[l:source_name]
         if !a:force
-            if has_key(s:matches, l:source_name) && s:matches[l:source_name]['incomplete']
-                " force refresh since the results are incomplete
-                let l:refresh = 1
-            else
-                " refresh only if the prefix changed
-                let l:source = s:sources[l:source_name]
-                if has_key(l:source, 'refresh_pattern')
-                    let l:refresh_pattern = l:source['refresh_pattern']
-                    if (type(l:refresh_pattern) != type(''))
-                        let l:refresh_pattern = l:refresh_pattern()
-                    endif
+            if has_key(s:matches, l:source_name)
+                if s:matches[l:source_name]['incomplete']
+                    let l:refresh = 1
                 else
-                    let l:refresh_pattern = g:asyncomplete_default_refresh_pattern
+                    let l:matchpos = s:get_matchpos(s:sources[l:source_name], a:ctx)
+                    let l:startpos = l:matchpos[1]
+                    let l:endpos = l:matchpos[2]
+                    let l:typed_len = l:endpos - l:startpos
+                    let l:startcol = len(l:typed[:len(l:typed) - l:typed_len])
+                    if s:matches[l:source_name]['startcol'] == l:startcol
+                        if s:matches[l:source_name]['pending']
+                            call s:queue_compute_candidates()
+                        else
+                            if s:supports_smart_completion()
+                                call s:queue_compute_candidates()
+                            endif
+                        endif
+                    else 
+                        if s:matches[l:source_name]['pending']
+                            call s:queue_compute_candidates()
+                        else
+                            let l:typed_len = l:endpos - l:startpos
+                            let l:min_chars = get(l:source, 'min_chars', g:asyncomplete_min_chars)
+                            if l:typed_len >= l:min_chars
+                                let l:refresh = 1
+                                let s:matches[l:source_name] = {
+                                    \   'pending': 1,
+                                    \   'startcol': l:matchpos[1],
+                                    \   'incomplete': 0,
+                                    \   'candidates': [],
+                                    \ }
+                            endif
+                            call s:queue_compute_candidates()
+                        endif
+                    endif
                 endif
-
-                let l:matchpos = s:matchstrpos(l:typed, l:refresh_pattern)
+            else
+                let l:matchpos = s:get_matchpos(s:sources[l:source_name], a:ctx)
                 let l:startpos = l:matchpos[1]
                 let l:endpos = l:matchpos[2]
-
                 let l:typed_len = l:endpos - l:startpos
                 let l:min_chars = get(l:source, 'min_chars', g:asyncomplete_min_chars)
-                if l:typed_len == l:min_chars || (!pumvisible() && l:typed_len >= l:min_chars)
+                if l:typed_len >= l:min_chars
                     let l:refresh = 1
+                    let s:matches[l:source_name] = {
+                        \   'pending': 1,
+                        \   'startcol': len(l:typed[:len(l:typed) - l:typed_len -1]),
+                        \   'typed': l:typed[:l:matchpos[1]],
+                        \   'incomplete': 0,
+                        \   'candidates': [],
+                        \ }
                 endif
             endif
         endif
         if l:refresh
             try
-                call asyncomplete#log('core.s:notify_sources_to_refresh()', 'completor', l:source_name, a:ctx)
+                call asyncomplete#log('core.s:notify_sources_to_refresh', 'completor()', l:source_name, a:ctx)
                 call s:sources[l:source_name].completor(s:sources[l:source_name], a:ctx)
             catch
-                call asyncomplete#log('core.s:notify_sources_to_refresh()', 'completor', 'error', v:exception)
+                call asyncomplete#log('core.s:notify_sources_to_refresh', 'completor()', 'error', v:exception)
                 continue
             endtry
         endif
     endfor
+endfunction
+
+function! s:get_matchpos(source_info, ctx) abort
+    if has_key(a:source_info, 'refresh_pattern')
+        let l:refresh_pattern = a:source_info['refresh_pattern']
+        if (type(l:refresh_pattern) != type(''))
+            let l:refresh_pattern = l:refresh_pattern()
+        endif
+    else
+        let l:refresh_pattern = g:asyncomplete_default_refresh_pattern
+    endif
+
+    return s:matchstrpos(a:ctx['typed'], l:refresh_pattern)
 endfunction
 
 function! asyncomplete#complete(name, ctx, startcol, candidates, ...) abort
@@ -223,12 +265,18 @@ function! asyncomplete#complete(name, ctx, startcol, candidates, ...) abort
     " handle context_changed scenarios
 
     let s:matches[a:name] = {
+        \ 'pending': 0,
         \ 'startcol': a:startcol,
         \ 'incomplete': l:incomplete,
         \ 'candidates': s:normalize_candidates(a:name, a:candidates),
+        \ 'typed': '',
         \ 'ctx': a:ctx,
         \ }
 
+    call s:queue_compute_candidates()
+endfunction
+
+function! s:queue_compute_candidates() abort
     " call s:compute_candidates() at the end of the event loop to avoid calling expensive compute multiple times
     if exists('s:compute_timer_candidate')
         call timer_stop(s:compute_timer_candidate)
@@ -276,7 +324,9 @@ function! s:compute_candidates(...) abort
     " find mimnimal startcol from all matches
     let l:startcols = []
     for l:item in values(s:matches)
-        let l:startcols += [l:item['startcol']]
+        if !l:item['pending']
+            let l:startcols += [l:item['startcol']]
+        endif
     endfor
     let l:startcol = min(l:startcols)
 
@@ -329,7 +379,7 @@ function! s:update_pum(ctx, startcol, candidates) abort
 
     let l:prefix = a:ctx['typed'][a:startcol-1 : col('.') - 1]
 
-    call asyncomplete#log('update pum', a:ctx['typed'], a:startcol, col('.'), l:prefix)
+    call asyncomplete#log('update pum')
 
     " filter candidates
     let l:candidates = s:supports_smart_completion() ? s:filter_completion_items_lua(l:prefix, a:candidates) : a:candidates
