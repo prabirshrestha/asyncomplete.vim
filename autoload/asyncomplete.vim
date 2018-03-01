@@ -235,8 +235,18 @@ function! s:notify_sources_to_refresh(ctx, force) abort
         endif
         if l:refresh
             try
-                call asyncomplete#log('core.s:notify_sources_to_refresh', 'completor()', l:source_name, a:ctx)
-                call s:sources[l:source_name].completor(s:sources[l:source_name], a:ctx)
+                let l:ctx = a:ctx
+                let l:typed = l:ctx['typed']
+                let l:matchpos = s:get_matchpos(s:sources[l:source_name], a:ctx)
+                let l:startpos = l:matchpos[1]
+                let l:endpos = l:matchpos[2]
+                let l:typed_len = l:endpos - l:startpos
+                let l:startcol = len(l:typed[:len(l:typed) - l:typed_len -1])
+                let l:base = l:ctx['typed'][l:startcol-1:]
+                let l:ctx['startcol'] = l:startcol
+                let l:ctx['base'] = l:base
+                call asyncomplete#log('core.s:notify_sources_to_refresh', 'completor()', l:source_name, l:ctx)
+                call s:sources[l:source_name].completor(s:sources[l:source_name], l:ctx)
             catch
                 call asyncomplete#log('core.s:notify_sources_to_refresh', 'completor()', 'error', v:exception)
                 continue
