@@ -272,9 +272,14 @@ endfunction
 
 function! asyncomplete#complete(name, ctx, startcol, candidates, ...) abort
     let l:incomplete = a:0 > 0 ? a:1 : 0
-    call asyncomplete#log('core#complete', a:name, a:startcol, len(a:candidates), l:incomplete)
+    let l:current_context = asyncomplete#context()
+    call asyncomplete#log('core#complete', a:name, a:startcol, len(a:candidates), l:incomplete, a:ctx, l:current_context)
     
-    " handle context_changed scenarios
+    " handle context_changed scenarios, add more scenarios
+    if l:current_context['lnum'] != a:ctx['lnum'] || l:current_context['filetype'] != a:ctx['filetype']
+        call asyncomplete#log('core#complete', a:name, 'ignoring since context changed', l:current_context, a:ctx)
+        return
+    endif
 
     let s:matches[a:name] = {
         \ 'pending': 0,
