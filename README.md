@@ -143,7 +143,7 @@ function s:completor(opt, ctx)
   call mylanguage#get_async_completions({candidates, startcol -> asyncomplete#complete(a:opt['name'], a:ctx, startcol, candidates) })
 endfunction
 
-call asyncomplete#register_source({
+au User asyncomplete_setup call asyncomplete#register_source({
     \ 'name': 'mylanguage',
     \ 'whitelist': [*],
     \ 'completor': function('s:completor'),
