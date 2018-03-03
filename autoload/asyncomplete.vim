@@ -235,12 +235,14 @@ function! s:notify_sources_to_refresh(ctx, force) abort
         endif
         if l:refresh
             try
-                let l:ctx = a:ctx
+                let l:ctx = copy(a:ctx)
                 let l:typed = l:ctx['typed']
-                let l:matchpos = s:get_matchpos(s:sources[l:source_name], a:ctx)
-                let l:startpos = l:matchpos[1]
-                let l:endpos = l:matchpos[2]
-                let l:typed_len = l:endpos - l:startpos
+                if !exits('l:matchpos')
+                  let l:matchpos = s:get_matchpos(s:sources[l:source_name], a:ctx)
+                  let l:startpos = l:matchpos[1]
+                  let l:endpos = l:matchpos[2]
+                  let l:typed_len = l:endpos - l:startpos
+                endif
                 let l:startcol = len(l:typed[:len(l:typed) - l:typed_len -1])
                 let l:base = l:ctx['typed'][l:startcol-1:]
                 let l:ctx['startcol'] = l:startcol
