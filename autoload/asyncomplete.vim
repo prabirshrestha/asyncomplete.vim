@@ -238,7 +238,7 @@ function! s:notify_sources_to_refresh(ctx, force) abort
             try
                 let l:ctx = copy(a:ctx)
                 let l:typed = l:ctx['typed']
-                if !exists('l:matchpos')
+                if !exits('l:matchpos')
                   let l:matchpos = s:get_matchpos(s:sources[l:source_name], a:ctx)
                   let l:startpos = l:matchpos[1]
                   let l:endpos = l:matchpos[2]
