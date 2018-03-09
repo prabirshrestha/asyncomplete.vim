@@ -388,7 +388,7 @@ function! s:update_pum(ctx, startcol, candidates) abort
     call asyncomplete#log('update pum')
 
     " filter candidates
-    let l:candidates = s:supports_smart_completion() ? s:filter_completion_items_lua(l:prefix, a:candidates) : a:candidates
+    let l:candidates = s:supports_smart_completion() ? s:filter_completion_items_lua(l:prefix, a:candidates) : s:filter_completion_items(l:prefix, a:candidates)
 
     call complete(a:startcol, l:candidates)
 endfunction
