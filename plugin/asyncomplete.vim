@@ -3,8 +3,6 @@ if exists('g:asyncomplete_loaded')
 endif
 let g:asyncomplete_loaded = 1
 
-let s:has_lua = has('lua') || has('neovim-0.2.2')
-
 if get(g:, 'asyncomplete_enable_for_all', 1)
     augroup asyncomplete_enable
         au!
@@ -12,14 +10,10 @@ if get(g:, 'asyncomplete_enable_for_all', 1)
     augroup END
 endif
 
-let g:asyncomplete_min_chars = get(g:, 'asyncomplete_min_chars', 1)
 let g:asyncomplete_auto_popup = get(g:, 'asyncomplete_auto_popup', 1)
 let g:asyncomplete_completion_delay = get(g:, 'asyncomplete_completion_delay', 100)
 let g:asyncomplete_log_file = get(g:, 'asyncomplete_log_file', '')
 let g:asyncomplete_remove_duplicates = get(g:, 'asyncomplete_remove_duplicates', 0)
-let g:asyncomplete_smart_completion = get(g:, 'asyncomplete_smart_completion', 0) " s:has_lua && exists('##TextChangedP')
-let g:asyncomplete_default_refresh_pattern = get(g:, 'asyncomplete_default_refresh_pattern', '\(\k\+$\|\.$\|:$\)')
-let g:asyncomplete_normalize_completion_items = get(g:, 'asyncomplete_normalize_completion_items', 0)
 
 " Setting it to true may slow/hang vim especially on slow are sources such as asyncomplete-lsp.vim
 " use asyncomplete_force_refersh to retrive the latest autocomplete results instead.
@@ -27,13 +21,3 @@ let g:asyncomplete_force_refresh_on_context_changed = get(g:, 'asyncomplete_forc
 
 " imap <c-space> <Plug>(asyncomplete_force_refresh)
 inoremap <silent> <expr> <Plug>(asyncomplete_force_refresh) asyncomplete#force_refresh()
-
-function! s:init_lua() abort
-    lua << EOF
-        asyncomplete = {}
-EOF
-endfunction
-
-if s:has_lua
-    call s:init_lua()
-endif
