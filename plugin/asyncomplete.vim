@@ -12,6 +12,7 @@ endif
 
 let g:asyncomplete_auto_popup = get(g:, 'asyncomplete_auto_popup', 1)
 let g:asyncomplete_completion_delay = get(g:, 'asyncomplete_completion_delay', 100)
+let g:asyncomplete_default_refresh_pattern = get(g:, 'asyncomplete_default_refresh_pattern', '\(\k\+$\|\.$\|:$\)')
 let g:asyncomplete_log_file = get(g:, 'asyncomplete_log_file', '')
 let g:asyncomplete_remove_duplicates = get(g:, 'asyncomplete_remove_duplicates', 0)
 
