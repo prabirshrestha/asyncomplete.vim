@@ -36,17 +36,26 @@ function! asyncomplete#enable_for_buffer() abort
     endif
 
     let b:asyncomplete_enable = 1
-    augroup ayncomplete
-        autocmd! * <buffer>
-        autocmd InsertEnter <buffer> call s:python_cm_insert_enter()
-        autocmd InsertEnter <buffer> call s:change_tick_start()
-        autocmd InsertLeave <buffer> call s:change_tick_stop()
-        " working together with timer, the timer is for detecting changes
-        " popup menu is visible. TextChangedI will not be triggered when popup
-        " menu is visible, but TextChangedI is more efficient and faster than
-        " timer when popup menu is not visible.
-        autocmd TextChangedI <buffer> call s:check_changes()
-    augroup END
+    if exists('##TextChangedP')
+        augroup ayncomplete
+            autocmd! * <buffer>
+            autocmd InsertEnter <buffer> call s:python_cm_insert_enter()
+            autocmd TextChangedI <buffer> call s:on_changed()
+            autocmd TextChangedP <buffer> call s:on_changed()
+        augroup END
+    else
+        augroup ayncomplete
+            autocmd! * <buffer>
+            autocmd InsertEnter <buffer> call s:python_cm_insert_enter()
+            autocmd InsertEnter <buffer> call s:change_tick_start()
+            autocmd InsertLeave <buffer> call s:change_tick_stop()
+            " working together with timer, the timer is for detecting changes
+            " popup menu is visible. TextChangedI will not be triggered when popup
+            " menu is visible, but TextChangedI is more efficient and faster than
+            " timer when popup menu is not visible.
+            autocmd TextChangedI <buffer> call s:check_changes()
+        augroup END
+    endif
 endfunction
 
 function! asyncomplete#register_source(info) abort
