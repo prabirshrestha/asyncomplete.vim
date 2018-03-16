@@ -39,14 +39,16 @@ function! asyncomplete#enable_for_buffer() abort
     if exists('##TextChangedP')
         augroup ayncomplete
             autocmd! * <buffer>
-            autocmd InsertEnter <buffer> call s:python_cm_insert_enter()
+            autocmd InsertEnter <buffer> call s:remote_insert_enter()
+            autocmd InsertLeave <buffer> call s:remote_insert_leave()
             autocmd TextChangedI <buffer> call s:on_changed()
             autocmd TextChangedP <buffer> call s:on_changed()
         augroup END
     else
         augroup ayncomplete
             autocmd! * <buffer>
-            autocmd InsertEnter <buffer> call s:python_cm_insert_enter()
+            autocmd InsertEnter <buffer> call s:remote_insert_enter()
+            autocmd InsertLeave <buffer> call s:remote_insert_leave()
             autocmd InsertEnter <buffer> call s:change_tick_start()
             autocmd InsertLeave <buffer> call s:change_tick_stop()
             " working together with timer, the timer is for detecting changes
@@ -131,13 +133,15 @@ function! asyncomplete#context_changed(ctx) abort
     return getcurpos() != a:ctx['curpos']
 endfunction
 
-function! s:python_cm_insert_enter() abort
-    call asyncomplete#log('core', 'python_cm_insert_enter')
+function! s:remote_insert_enter() abort
+    call asyncomplete#log('core', 'remote_insert_enter')
     let s:matches = {}
 endfunction
 
-" function! s:python_cm_insert_leave() abort
-" endfunction
+function! s:remote_insert_leave() abort
+    call asyncomplete#log('core', 'remote_insert_leave')
+    let s:matches = {}
+endfunction
 
 function! s:change_tick_start() abort
     if s:change_timer != -1
