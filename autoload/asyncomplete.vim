@@ -189,6 +189,16 @@ function! s:remote_insert_leave() abort
     let s:matches = {}
 endfunction
 
+function! s:get_refresh_pattern(source) abort
+    " TODO: support for function and dict
+    if has_key(a:source, 'refresh_pattern')
+        let l:refresh_pattern = a:source['refresh_pattern']
+    else
+        let l:refresh_pattern = g:asyncomplete_default_refresh_pattern
+    endif
+    return l:refresh_pattern
+endfunction
+
 function! s:remote_refresh(ctx, force) abort
     let l:has_popped_up = 0
     if a:force
@@ -205,11 +215,7 @@ function! s:remote_refresh(ctx, force) abort
 
     for l:name in s:get_active_sources_for_buffer()
         let l:source = s:sources[l:name]
-        if has_key(l:source, 'refresh_pattern')
-            let l:refresh_pattern = l:source['refresh_pattern']
-        else
-            let l:refresh_pattern = '\k\+$'
-        endif
+        let l:refresh_pattern = s:get_refresh_pattern(l:source)
         let l:matchpos = s:matchstrpos(l:typed, l:refresh_pattern)
         let l:startpos = l:matchpos[1]
         let l:endpos = l:matchpos[2]
