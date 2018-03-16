@@ -111,7 +111,7 @@ endfunction
 
 function! asyncomplete#_force_refresh() abort
     if get(b:, 'asyncomplete_enable')
-        call s:python_cm_refresh(asyncomplete#context(), 1)
+        call s:remote_refresh(asyncomplete#context(), 1)
     endif
     return ''
 endfunction
@@ -131,16 +131,6 @@ function! asyncomplete#context_changed(ctx) abort
     " Note: changedtick is triggered when `<c-x><c-u>` is pressed due to vim's
     " bug, use curpos as workaround
     return getcurpos() != a:ctx['curpos']
-endfunction
-
-function! s:remote_insert_enter() abort
-    call asyncomplete#log('core', 'remote_insert_enter')
-    let s:matches = {}
-endfunction
-
-function! s:remote_insert_leave() abort
-    call asyncomplete#log('core', 'remote_insert_leave')
-    let s:matches = {}
 endfunction
 
 function! s:change_tick_start() abort
@@ -174,7 +164,7 @@ function! s:on_changed() abort
 
     let l:ctx = asyncomplete#context()
 
-    call s:python_cm_refresh(l:ctx, 0)
+    call s:remote_refresh(l:ctx, 0)
 endfunction
 
 function! s:check_changes(...) abort
@@ -187,6 +177,54 @@ endfunction
 
 function! s:change_tick() abort
     return [b:changedtick, getcurpos()]
+endfunction
+
+function! s:remote_insert_enter() abort
+    call asyncomplete#log('core', 'remote_insert_enter')
+    let s:matches = {}
+endfunction
+
+function! s:remote_insert_leave() abort
+    call asyncomplete#log('core', 'remote_insert_leave')
+    let s:matches = {}
+endfunction
+
+function! s:remote_refresh(ctx, force) abort
+    let l:has_popped_up = 0
+    if a:force
+        call s:notify_sources_to_refresh(s:get_active_sources_for_buffer(), a:ctx)
+        return
+    endif
+
+    if !pumvisible() && !g:asyncomplete_auto_popup
+        return
+    endif
+
+    let l:typed = a:ctx['typed']
+    let l:sources_to_notify = []
+
+    for l:name in s:get_active_sources_for_buffer()
+        let l:source = s:sources[l:name]
+        if has_key(l:source, 'refresh_pattern')
+            let l:refresh_pattern = l:source['refresh_pattern']
+        else
+            let l:refresh_pattern = '\k\+$'
+        endif
+        let l:matchpos = s:matchstrpos(l:typed, l:refresh_pattern)
+        let l:startpos = l:matchpos[1]
+        let l:endpos = l:matchpos[2]
+
+        call asyncomplete#log('core', 's:remote_refresh', l:matchpos, a:ctx)
+
+        let l:typed_len = l:endpos - l:startpos
+        if l:typed_len == 1
+            call add(l:sources_to_notify, l:name)
+        elseif has_key(s:matches, l:name) && s:matches[l:name]['refresh']
+            call add(l:sources_to_notify, l:name)
+        endif
+    endfor
+
+    call s:notify_sources_to_refresh(l:sources_to_notify, a:ctx)
 endfunction
 
 function! s:python_cm_complete(name, ctx, startcol, matches, refresh, outdated) abort
@@ -260,44 +298,6 @@ else
         return [matchstr(a:expr, a:pattern), match(a:expr, a:pattern), matchend(a:expr, a:pattern)]
     endfunction
 endif
-
-function! s:python_cm_refresh(ctx, force) abort
-    let l:has_popped_up = 0
-    if a:force
-        call s:notify_sources_to_refresh(s:get_active_sources_for_buffer(), a:ctx)
-        return
-    endif
-
-    if !pumvisible() && !g:asyncomplete_auto_popup
-        return
-    endif
-
-    let l:typed = a:ctx['typed']
-    let l:sources_to_notify = []
-
-    for l:name in s:get_active_sources_for_buffer()
-        let l:source = s:sources[l:name]
-        if has_key(l:source, 'refresh_pattern')
-            let l:refresh_pattern = l:source['refresh_pattern']
-        else
-            let l:refresh_pattern = '\k\+$'
-        endif
-        let l:matchpos = s:matchstrpos(l:typed, l:refresh_pattern)
-        let l:startpos = l:matchpos[1]
-        let l:endpos = l:matchpos[2]
-
-        call asyncomplete#log('core', 's:python_cm_refresh', l:matchpos, a:ctx)
-
-        let l:typed_len = l:endpos - l:startpos
-        if l:typed_len == 1
-            call add(l:sources_to_notify, l:name)
-        elseif has_key(s:matches, l:name) && s:matches[l:name]['refresh']
-            call add(l:sources_to_notify, l:name)
-        endif
-    endfor
-
-    call s:notify_sources_to_refresh(l:sources_to_notify, a:ctx)
-endfunction
 
 function! s:notify_sources_to_refresh(sources, ctx) abort
     if exists('s:complete_timer')
