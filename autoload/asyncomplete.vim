@@ -12,6 +12,7 @@ endif
 
 let s:sources = {}
 let s:change_timer = -1
+let s:on_changed_p = 0
 let s:last_tick = []
 let s:has_popped_up = 0
 let s:complete_timer_ctx = {}
@@ -42,7 +43,7 @@ function! asyncomplete#enable_for_buffer() abort
             autocmd InsertEnter <buffer> call s:remote_insert_enter()
             autocmd InsertLeave <buffer> call s:remote_insert_leave()
             autocmd TextChangedI <buffer> call s:on_changed()
-            autocmd TextChangedP <buffer> call s:on_changed()
+            autocmd TextChangedP <buffer> call s:on_changed_p()
         augroup END
     else
         augroup ayncomplete
@@ -152,7 +153,7 @@ function! s:change_tick_stop() abort
     let s:change_timer = -1
 endfunction
 
-function! s:on_changed() abort
+function! s:on_changed_common() abort
     if !get(b:, 'asyncomplete_enable') || mode() isnot# 'i' || &paste
         return
     endif
@@ -165,6 +166,21 @@ function! s:on_changed() abort
     let l:ctx = asyncomplete#context()
 
     call s:remote_refresh(l:ctx, 0)
+endfunction
+
+function! s:on_changed() abort
+    let s:on_changed_p = 0
+    call s:on_changed_common()
+endfunction
+
+function! s:on_changed_p() abort
+    if s:on_changed_p == 0
+        " avoid duplicate remote_refresh by ignoring first TextChangedP
+        let s:on_changed_p = 1
+        return
+    endif
+
+    call s:on_changed_common()
 endfunction
 
 function! s:check_changes(...) abort
