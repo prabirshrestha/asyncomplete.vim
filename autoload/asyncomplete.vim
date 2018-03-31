@@ -330,15 +330,62 @@ function! s:notify_sources_to_refresh(sources, ctx) abort
     let s:complete_timer = timer_start(g:asyncomplete_completion_delay, function('s:complete_timeout'))
     let s:complete_timer_ctx = a:ctx
 
+    let l:refreshed = 0
+
     for l:name in a:sources
         try
             call asyncomplete#log('core', 'completor()', l:name, a:ctx)
+            let l:refreshed = 1
             call s:sources[l:name].completor(s:sources[l:name], a:ctx)
         catch
             call asyncomplete#log('core', 'notify_sources_to_refresh', 'error', v:exception)
             continue
         endtry
     endfor
+    if !l:refreshed
+      call s:complete_cached(a:ctx)
+    endif
+endfunction
+
+function! s:complete_cached(ctx) abort
+    let l:filtered_matches = []
+
+    let l:sources = sort(keys(s:matches), function('s:sort_sources_by_priority'))
+
+    if g:asyncomplete_remove_duplicates
+        let l:sources = filter(copy(l:sources), 'index(l:sources, v:val, v:key+1) == -1')
+    endif
+
+    let l:startcol = 0
+
+    for l:name in l:sources
+        let l:info = s:matches[l:name]
+        let l:curstartcol = l:info['startcol']
+        let l:curmatches = l:info['matches']
+
+        let l:startcol = l:curstartcol
+
+        let l:prefix = a:ctx['typed'][l:startcol-1 : col('.') -1]
+
+        if l:prefix ==# ""
+          continue
+        endif
+
+        let l:normalizedcurmatches = []
+        for l:item in l:curmatches
+            let l:e = {}
+            if type(l:item) == type('')
+                let l:e['word'] = l:item
+            else
+                let l:e = copy(l:item)
+                let l:e['word'] = l:e['word']
+            endif
+            let l:normalizedcurmatches += [l:e]
+        endfor
+
+        let l:filtered_matches += s:filter_completion_items(l:prefix, l:normalizedcurmatches)
+    endfor
+    call s:core_complete(a:ctx, l:startcol, l:filtered_matches, s:matches)
 endfunction
 
 function! s:sort_sources_by_priority(source1, source2) abort
