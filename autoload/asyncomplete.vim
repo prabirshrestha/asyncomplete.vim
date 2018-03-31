@@ -239,7 +239,7 @@ function! s:remote_refresh(ctx, force) abort
         call asyncomplete#log('core', 's:remote_refresh', l:matchpos, a:ctx)
 
         let l:typed_len = l:endpos - l:startpos
-        if l:typed_len == 1
+        if l:typed_len >= 1
             call add(l:sources_to_notify, l:name)
         elseif has_key(s:matches, l:name) && s:matches[l:name]['refresh']
             call add(l:sources_to_notify, l:name)
