@@ -202,17 +202,6 @@ As a source author you do not have to worry about synchronization issues in case
 characters. asyncomplete.vim uses partial caching as well as ignores if the context changes when calling `asyncomplete#complete`.
 This is one of the core reason why the original context must be passed when calling `asyncomplete#complete`.
 
-### Suppress completion menu messages
-
-If you notice messages like 'Pattern not found' or 'Match 1 of <N>' printed in red colour in vim command line and in `:messages` history and you are annoyed
-with them, try setting `shortmess` vim option in your `.vimrc` like so:
-
-```vim
-set shortmess+=c
-```
-
-See `:help shortmess` for details and description.
-
 ### Credits
 All the credit goes to the following projects
 * [https://github.com/roxma/nvim-complete-manager](https://github.com/roxma/nvim-complete-manager)
