@@ -166,7 +166,7 @@ function! s:change_tick() abort
 endfunction
 
 function! s:on_changed_common() abort
-    if !get(b:, 'asyncomplete_enable') || mode() isnot# 'i' || &paste
+    if s:should_skip()
         return
     endif
 
@@ -193,6 +193,10 @@ function! s:on_changed_p() abort
     endif
 
     call s:on_changed_common()
+endfunction
+
+function! s:should_skip() abort
+    return !get(b:, 'asyncomplete_enable') || mode() isnot# 'i' || &paste
 endfunction
 
 function! s:remote_insert_enter() abort
