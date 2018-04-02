@@ -153,6 +153,18 @@ function! s:change_tick_stop() abort
     let s:change_timer = -1
 endfunction
 
+function! s:check_changes(...) abort
+    let l:tick = s:change_tick()
+    if l:tick != s:last_tick
+        let s:last_tick = l:tick
+        call s:on_changed()
+    endif
+endfunction
+
+function! s:change_tick() abort
+    return [b:changedtick, getcurpos()]
+endfunction
+
 function! s:on_changed_common() abort
     if !get(b:, 'asyncomplete_enable') || mode() isnot# 'i' || &paste
         return
@@ -181,18 +193,6 @@ function! s:on_changed_p() abort
     endif
 
     call s:on_changed_common()
-endfunction
-
-function! s:check_changes(...) abort
-    let l:tick = s:change_tick()
-    if l:tick != s:last_tick
-        let s:last_tick = l:tick
-        call s:on_changed()
-    endif
-endfunction
-
-function! s:change_tick() abort
-    return [b:changedtick, getcurpos()]
 endfunction
 
 function! s:remote_insert_enter() abort
