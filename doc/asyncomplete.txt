@@ -5,9 +5,9 @@
 ===============================================================================
 CONTENTS                                                *asyncomplete-contents*
 
-    1. Introduction        |asyncomplete-introduction|
-    2. Options             |asyncomplete-options|
-
+    1. Introduction              |asyncomplete-introduction|
+    2. Options                   |asyncomplete-options|
+    3. Global vim configuration  |asyncomplete-global-config|
 
 ===============================================================================
 1. Introduction                                     *asyncomplete-introduction*
@@ -57,5 +57,18 @@ g:asyncomplete_force_refresh_on_context_changed *g:asyncomplete_force_refresh_on
 
     Note Setting to 1 may call force_refresh often which may slow down vim
     specially for those sources that are heavy in computation in vimscript.
+
 ===============================================================================
+3. Global vim configuration                          *asyncomplete-global-config*
+
+If you notice messages like 'Pattern not found' or 'Match 1 of <N>' printed in
+red colour in vim command line and in `:messages` history and you are annoyed
+with them, try setting `shortmess` vim option in your `.vimrc` like so:
+>
+    set shortmess+=c
+<
+See `:help shortmess` for details and description.
+
+===============================================================================
+
   vim:tw=78:ts=4:sts=4:sw=4:ft=help:norl:
