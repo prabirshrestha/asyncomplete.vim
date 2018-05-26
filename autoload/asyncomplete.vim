@@ -17,6 +17,8 @@ let s:last_tick = []
 let s:has_popped_up = 0
 let s:complete_timer_ctx = {}
 let s:already_setup = 0
+let s:next_tick_single_exec_metadata = {}
+let s:supports_getbufinfo = exists('*getbufinfo')
 
 function! asyncomplete#log(...) abort
     if !empty(g:asyncomplete_log_file)
@@ -44,6 +46,7 @@ function! asyncomplete#enable_for_buffer() abort
             autocmd InsertLeave <buffer> call s:remote_insert_leave()
             autocmd TextChangedI <buffer> call s:on_changed()
             autocmd TextChangedP <buffer> call s:on_changed_p()
+            autocmd FileType <buffer> call s:file_type_changed()
         augroup END
     else
         augroup ayncomplete
@@ -52,6 +55,7 @@ function! asyncomplete#enable_for_buffer() abort
             autocmd InsertLeave <buffer> call s:remote_insert_leave()
             autocmd InsertEnter <buffer> call s:change_tick_start()
             autocmd InsertLeave <buffer> call s:change_tick_stop()
+            autocmd FileType <buffer> call s:file_type_changed()
             " working together with timer, the timer is for detecting changes
             " popup menu is visible. TextChangedI will not be triggered when popup
             " menu is visible, but TextChangedI is more efficient and faster than
@@ -65,6 +69,8 @@ function! asyncomplete#register_source(info) abort
     if has_key(s:sources, a:info['name'])
         return
     endif
+
+    call s:next_tick_single_exec('clear_active_sources', function('s:clear_active_sources'))
 
     if has_key(a:info, 'events') && has_key(a:info, 'on_event')
         execute 'augroup asyncomplete_source_event_' . a:info['name']
@@ -84,12 +90,24 @@ endfunction
 
 function! asyncomplete#unregister_source(name) abort
     try
+        call s:next_tick_single_exec('clear_active_sources', function('s:clear_active_sources'))
         let l:info = s:sources[a:name]
         unlet l:info
         unlet s:sources[a:name]
     catch
         return
     endtry
+endfunction
+
+function! s:clear_active_sources() abort
+    call asyncomplete#log('core', 's:clear_active_sources', bufnr('%'))
+    if s:supports_getbufinfo
+        for l:buf in getbufinfo()
+            if has_key(l:buf['variables'], 'asyncomplete_active_sources')
+                unlet l:buf['variables']['asyncomplete_active_sources']
+            endif
+        endfor
+    endif
 endfunction
 
 function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
@@ -209,6 +227,10 @@ function! s:remote_insert_leave() abort
     let s:matches = {}
 endfunction
 
+function! s:file_type_changed() abort
+    call s:next_tick_single_exec('clear_active_sources', function('s:clear_active_sources'))
+endfunction
+
 function! s:get_refresh_pattern(source) abort
     " TODO: support for function and dict
     if has_key(a:source, 'refresh_pattern')
@@ -284,8 +306,13 @@ function! s:python_cm_complete_timeout(srcs, ctx) abort
 endfunction
 
 function! s:get_active_sources_for_buffer() abort
-    " TODO: cache active sources per buffer
-    let l:active_sources = []
+    if exists('b:asyncomplete_active_sources')
+        " active sources were cached for buffer
+        return b:asyncomplete_active_sources
+    endif
+
+    call asyncomplete#log('core', 'computing get_active_sources_for_buffer', bufnr('%'))
+    let b:asyncomplete_active_sources = []
     for [l:name, l:info] in items(s:sources)
         let l:blacklisted = 0
 
@@ -305,14 +332,14 @@ function! s:get_active_sources_for_buffer() abort
         if has_key(l:info, 'whitelist')
             for l:filetype in l:info['whitelist']
                 if l:filetype == &filetype || l:filetype is# '*'
-                    let l:active_sources += [l:name]
+                    let b:asyncomplete_active_sources += [l:name]
                     break
                 endif
             endfor
         endif
     endfor
 
-    return l:active_sources
+    return b:asyncomplete_active_sources
 endfunction
 
 if exists('*matchstrpos')
@@ -465,6 +492,21 @@ function! s:complete_timeout(timer) abort
         return
     endif
     call s:python_cm_complete_timeout(s:sources, s:complete_timer_ctx)
+endfunction
+
+" helper function to queue the function at the end of the event loop.
+" last function wins
+function! s:next_tick_single_exec(id, func) abort
+    if has_key(s:next_tick_single_exec_metadata, a:id)
+        call timer_stop(s:next_tick_single_exec_metadata[a:id])
+        call remove(s:next_tick_single_exec_metadata, a:id)
+    endif
+    let s:next_tick_single_exec_metadata[a:id] = timer_start(0, function('s:next_tick_single_exec_callback', [a:func]))
+    return s:next_tick_single_exec_metadata[a:id]
+endfunction
+
+function s:next_tick_single_exec_callback(func, ...) abort
+    call a:func()
 endfunction
 
 function! asyncomplete#menu_selected() abort
