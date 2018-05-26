@@ -18,7 +18,9 @@ let s:has_popped_up = 0
 let s:complete_timer_ctx = {}
 let s:already_setup = 0
 let s:next_tick_single_exec_metadata = {}
+let s:script_path = expand('<sfile>:p:h')
 let s:supports_getbufinfo = exists('*getbufinfo')
+let s:supports_smart_completion = exists('##TextChangedP')
 
 function! asyncomplete#log(...) abort
     if !empty(g:asyncomplete_log_file)
@@ -262,13 +264,15 @@ function! s:remote_refresh(ctx, force) abort
         let l:startpos = l:matchpos[1]
         let l:endpos = l:matchpos[2]
 
-        call asyncomplete#log('core', 's:remote_refresh', l:matchpos, a:ctx)
+        call asyncomplete#log('core', 's:remote_refresh', l:name, l:matchpos, a:ctx)
 
         let l:typed_len = l:endpos - l:startpos
         if l:typed_len == 1
             call add(l:sources_to_notify, l:name)
         elseif has_key(s:matches, l:name) && s:matches[l:name]['refresh']
             call add(l:sources_to_notify, l:name)
+        elseif s:supports_smart_completion()
+            call s:python_refresh_completions(a:ctx)
         endif
     endfor
 
@@ -427,7 +431,11 @@ function! s:python_refresh_completions(ctx) abort
             let l:normalizedcurmatches += [l:e]
         endfor
 
-        let l:filtered_matches += s:filter_completion_items(l:prefix, l:normalizedcurmatches)
+        if s:supports_smart_completion()
+            let l:filtered_matches += l:normalizedcurmatches
+        else
+            let l:filtered_matches += s:filter_completion_items(l:prefix, l:normalizedcurmatches)
+        endif
     endfor
 
     call s:core_complete(a:ctx, l:startcol, l:filtered_matches, s:matches)
@@ -473,7 +481,68 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
         setlocal completeopt+=noselect
     endif
 
-    call complete(a:startcol, a:matches)
+    call asyncomplete#log('core', 's:core_complete')
+
+    let l:candidates = s:supports_smart_completion() ? s:filter_completion_items_lua(a:ctx['typed'][a:startcol-1 : col('.') - 1], a:matches) : a:matches
+    call complete(a:startcol, l:candidates)
+endfunction
+
+function! s:supports_smart_completion() abort
+    return s:supports_smart_completion && g:asyncomplete_smart_completion
+endfunction
+
+function! s:filter_completion_items_lua(prefix, matches) abort
+    let l:tmpmatches = []
+    lua << EOF
+    function spairs(t, order)
+        -- collect the keys
+        local keys = {}
+        for k in pairs(t) do keys[#keys+1] = k end
+
+        -- if order function given, sort by it by passing the table and keys a, b,
+        -- otherwise just sort the keys
+        if order then
+            table.sort(keys, function(a,b) return order(t, a, b) end)
+        else
+            table.sort(keys)
+        end
+
+        -- return the iterator function
+        local i = 0
+        return function()
+            i = i + 1
+            if keys[i] then
+                return keys[i], t[keys[i]]
+            end
+        end
+    end
+
+    local prefix = vim.eval('a:prefix')
+    local matches = vim.eval('a:matches')
+    local tmpmatches = vim.eval('l:tmpmatches')
+    if asyncomplete.fts == nil then
+        local fts_fuzzy_match_script_path = vim.eval('s:script_path') .. '/fts_fuzzy_match.lua'
+        asyncomplete.fts = dofile(fts_fuzzy_match_script_path)
+        vim.eval("asyncomplete#log('fts_fuzzy_match loaded')")
+    end
+    local index = 0
+    local unsorted_matches = {}
+    for i = 0, #matches - 1 do
+        local word = matches[i].word
+        local matched, score, matchedIndices = asyncomplete.fts.fuzzy_match(prefix, word)
+        if matched == true then
+            table.insert(unsorted_matches, { score = score, match = matches[i] })
+        end
+        -- local matched = asyncomplete.fts.fuzzy_match_simple(prefix, word)
+        -- if matched == true then
+        --      tmpmatches:add(matches[i])
+        -- end
+    end
+    for k,v in spairs(unsorted_matches, function(t,a,b) return t[b].score < t[a].score end) do
+        tmpmatches:add(v.match)
+    end
+EOF
+    return l:tmpmatches
 endfunction
 
 function! s:complete_timeout(timer) abort
