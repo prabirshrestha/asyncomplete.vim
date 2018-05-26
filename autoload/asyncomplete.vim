@@ -384,7 +384,6 @@ function! s:python_refresh_completions(ctx) abort
     let l:names = keys(s:matches)
 
     if empty(l:names)
-        call s:python_complete(a:ctx, a:ctx['col'], [])
         return
     endif
 
@@ -442,14 +441,6 @@ function! s:filter_completion_items(prefix, matches) abort
         endif
     endfor
     return l:tmpmatches
-endfunction
-
-function! s:python_complete(ctx, startcol, matches) abort
-    if empty(a:matches)
-        " no need to fire complete message
-        return
-    endif
-    call s:core_complete(a:ctx, a:startcol, a:matches, s:matches)
 endfunction
 
 function! s:python_cm_event(name, event, ctx) abort
