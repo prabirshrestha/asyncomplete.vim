@@ -10,6 +10,7 @@ if get(g:, 'asyncomplete_enable_for_all', 1)
     augroup END
 endif
 
+let g:asyncomplete_auto_completeopt = get(g:, 'asyncomplete_auto_completeopt', 1)
 let g:asyncomplete_auto_popup = get(g:, 'asyncomplete_auto_popup', 1)
 let g:asyncomplete_completion_delay = get(g:, 'asyncomplete_completion_delay', 100)
 let g:asyncomplete_default_refresh_pattern = get(g:, 'asyncomplete_default_refresh_pattern', '\(\k\+$\|\.$\|>$\|:$\)')
