@@ -29,6 +29,29 @@ inoremap <silent> <expr> <Plug>(asyncomplete_force_refresh) asyncomplete#force_r
 function! s:init_lua() abort
     lua << EOF
         asyncomplete = {}
+
+        asyncomplete.dump = function(o)
+           if type(o) == 'table' then
+              local s = '{ '
+              for k,v in pairs(o) do
+                 if type(k) ~= 'number' then k = '"'..k..'"' end
+                 s = s .. '['..k..'] = ' .. asyncomplete.dump(v) .. ','
+              end
+              return s .. '} '
+           else
+              return tostring(o)
+           end
+        end
+
+        if vim['api'] ~= nil and vim.api['nvim_eval'] ~= nil then
+            asyncomplete.vim_eval = function(str)
+                return vim.api.nvim_eval(str)
+            end
+        else
+            asyncomplete.vim_eval = function(str)
+                return vim.eval(str)
+            end
+        end
 EOF
 endfunction
 

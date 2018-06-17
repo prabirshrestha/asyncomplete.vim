@@ -517,26 +517,25 @@ function! s:filter_completion_items_lua(prefix, matches) abort
         end
     end
 
-    local prefix = vim.eval('a:prefix')
-    local matches = vim.eval('a:matches')
-    local tmpmatches = vim.eval('l:tmpmatches')
+    local prefix = asyncomplete.vim_eval('a:prefix')
+    local matches = asyncomplete.vim_eval('a:matches')
+    local tmpmatches = asyncomplete.vim_eval('l:tmpmatches')
     if asyncomplete.fts == nil then
-        local fts_fuzzy_match_script_path = vim.eval('s:script_path') .. '/fts_fuzzy_match.lua'
+        local fts_fuzzy_match_script_path = asyncomplete.vim_eval('s:script_path') .. '/fts_fuzzy_match.lua'
         asyncomplete.fts = dofile(fts_fuzzy_match_script_path)
-        vim.eval("asyncomplete#log('fts_fuzzy_match loaded')")
+        asyncomplete.vim_eval("asyncomplete#log('fts_fuzzy_match loaded')")
     end
     local index = 0
     local unsorted_matches = {}
     for i = 0, #matches - 1 do
-        local word = matches[i].word
-        local matched, score, matchedIndices = asyncomplete.fts.fuzzy_match(prefix, word)
-        if matched == true then
-            table.insert(unsorted_matches, { score = score, match = matches[i] })
+        local match = matches[i]
+        if match ~= nil then
+            local word = match['word']
+            local matched, score, matchedIndices = asyncomplete.fts.fuzzy_match(prefix, word)
+            if matched == true then
+                table.insert(unsorted_matches, { score = score, match = match })
+            end
         end
-        -- local matched = asyncomplete.fts.fuzzy_match_simple(prefix, word)
-        -- if matched == true then
-        --      tmpmatches:add(matches[i])
-        -- end
     end
     for k,v in spairs(unsorted_matches, function(t,a,b) return t[b].score < t[a].score end) do
         tmpmatches:add(v.match)
