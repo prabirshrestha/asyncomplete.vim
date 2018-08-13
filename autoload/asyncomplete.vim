@@ -18,9 +18,15 @@ let s:has_popped_up = 0
 let s:complete_timer_ctx = {}
 let s:already_setup = 0
 let s:next_tick_single_exec_metadata = {}
-let s:script_path = expand('<sfile>:p:h')
+let s:has_lua = has('lua') || has('nvim-0.2.2')
 let s:supports_getbufinfo = exists('*getbufinfo')
 let s:supports_smart_completion = exists('##TextChangedP')
+let s:asyncomplete_folder = fnamemodify(expand('<sfile>:p:h') . '/../', ':p:h')
+
+function! s:init_lua() abort
+    exec 'lua asyncomplete_folder="' . s:asyncomplete_folder . '"'
+    exec 'luafile ' . s:asyncomplete_folder . '/lua/asyncomplete.lua'
+endfunction
 
 function! asyncomplete#log(...) abort
     if !empty(g:asyncomplete_log_file)
@@ -36,6 +42,9 @@ augroup END
 
 function! asyncomplete#enable_for_buffer() abort
     if !s:already_setup
+        if s:has_lua
+            call s:init_lua()
+        endif
         doautocmd User asyncomplete_setup
         let s:already_setup = 1
     endif
@@ -483,7 +492,7 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
 
     call asyncomplete#log('core', 's:core_complete')
 
-    let l:candidates = s:supports_smart_completion() ? s:filter_completion_items_lua(a:ctx['typed'][a:startcol-1 : col('.') - 1], a:matches) : a:matches
+    let l:candidates = s:supports_smart_completion() ? s:custom_filter_completion_items(a:ctx['typed'][a:startcol-1 : col('.') - 1], a:matches) : a:matches
     call complete(a:startcol, l:candidates)
 endfunction
 
@@ -491,57 +500,8 @@ function! s:supports_smart_completion() abort
     return s:supports_smart_completion && g:asyncomplete_smart_completion
 endfunction
 
-function! s:filter_completion_items_lua(prefix, matches) abort
-    let l:tmpmatches = []
-    lua << EOF
-    function spairs(t, order)
-        -- collect the keys
-        local keys = {}
-        for k in pairs(t) do keys[#keys+1] = k end
-
-        -- if order function given, sort by it by passing the table and keys a, b,
-        -- otherwise just sort the keys
-        if order then
-            table.sort(keys, function(a,b) return order(t, a, b) end)
-        else
-            table.sort(keys)
-        end
-
-        -- return the iterator function
-        local i = 0
-        return function()
-            i = i + 1
-            if keys[i] then
-                return keys[i], t[keys[i]]
-            end
-        end
-    end
-
-    local prefix = asyncomplete.vim_eval('a:prefix')
-    local matches = asyncomplete.vim_eval('a:matches')
-    local tmpmatches = asyncomplete.vim_eval('l:tmpmatches')
-    if asyncomplete.fts == nil then
-        local fts_fuzzy_match_script_path = asyncomplete.vim_eval('s:script_path') .. '/fts_fuzzy_match.lua'
-        asyncomplete.fts = dofile(fts_fuzzy_match_script_path)
-        asyncomplete.vim_eval("asyncomplete#log('fts_fuzzy_match loaded')")
-    end
-    local index = 0
-    local unsorted_matches = {}
-    for i = 0, #matches - 1 do
-        local match = matches[i]
-        if match ~= nil then
-            local word = match['word']
-            local matched, score, matchedIndices = asyncomplete.fts.fuzzy_match(prefix, word)
-            if matched == true then
-                table.insert(unsorted_matches, { score = score, match = match })
-            end
-        end
-    end
-    for k,v in spairs(unsorted_matches, function(t,a,b) return t[b].score < t[a].score end) do
-        tmpmatches:add(v.match)
-    end
-EOF
-    return l:tmpmatches
+function! s:custom_filter_completion_items(prefix, matches) abort
+    return luaeval('asyncomplete.filter_completion_items(_A.prefix, _A.matches)', { 'prefix': a:prefix, 'matches': a:matches })
 endfunction
 
 function! s:complete_timeout(timer) abort
