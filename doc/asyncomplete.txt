@@ -53,7 +53,10 @@ g:asyncomplete_smart_completion                  *g:asyncomplete_smart_completio
     Default: 0
 
     Enable smart completion i.e. fuzzy match.
-    Requires vim8 with lua support or neovim 0.2.2+ and `let g:asyncomplete_auto_popup=1`
+    Requirements:
+        * Vim8 with lua support `:echo has('lua')` or Neovim 0.2.2+
+        * TextChangedP autocmd support - `:echo exists('##TextChangedP')`
+        * `let g:asyncomplete_auto_popup = 1`
 
 g:asyncomplete_force_refresh_on_context_changed *g:asyncomplete_force_refresh_on_context_changed*
 
