@@ -58,6 +58,9 @@ g:asyncomplete_smart_completion                  *g:asyncomplete_smart_completio
         * TextChangedP autocmd support - `:echo exists('##TextChangedP')`
         * `let g:asyncomplete_auto_popup = 1`
 
+    Feel free to suggest or send pull requests to improve the smart completion
+    algorithm.
+
 g:asyncomplete_force_refresh_on_context_changed *g:asyncomplete_force_refresh_on_context_changed*
 
     Type: |Number|
