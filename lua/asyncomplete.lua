@@ -3,24 +3,31 @@ local fts = dofile(asyncomplete_folder .. '/lua/fts_fuzzy_match.lua')
 
 local is_neovim = vim['api'] ~= nil and vim.api['nvim_eval'] ~= nil
 
-function dump(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. asyncomplete.dump(v) .. ','
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
-end
-
 if is_neovim then
     function to_vim_list(obj)
         return obj
     end
+    function dump(o)
+        if type(o) == 'table' then
+            return vim.api.nvim_call_function('string', o)
+        else
+            return tostring(o)
+        end
+    end
 else
+    function dump(o)
+       if type(o) == 'table' then
+          local s = '{ '
+          for k,v in pairs(o) do
+             if type(k) ~= 'number' then k = '"'..k..'"' end
+             s = s .. '['..k..'] = ' .. asyncomplete.dump(v) .. ','
+          end
+          return s .. '} '
+       else
+          return tostring(o)
+       end
+    end
+
     function to_vim_list(obj)
         return vim.list(obj)
     end
