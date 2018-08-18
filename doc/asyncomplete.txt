@@ -40,12 +40,26 @@ g:asyncomplete_auto_popup                           *g:asyncomplete_auto_popup*
 
     Automatically show the autocomplete popup menu as you start typing.
 
-g:asyncomplete_default_refresh_pattern                   *g:asyncomplete_default_refresh_pattern*
+g:asyncomplete_default_refresh_pattern  *g:asyncomplete_default_refresh_pattern*
 
     Type: |String|
     Default: `'\(\k\+$\|\.$\|:$\)'`
 
     Default refresh pattern to use for when to show the popup menu.
+
+g:asyncomplete_smart_completion                  *g:asyncomplete_smart_completion*
+
+    Type: |Number|
+    Default: 0
+
+    Enable smart completion i.e. fuzzy match.
+    Requirements:
+        * Vim8 with lua support `:echo has('lua')` or Neovim 0.2.2+
+        * TextChangedP autocmd support - `:echo exists('##TextChangedP')`
+        * `let g:asyncomplete_auto_popup = 1`
+
+    Feel free to suggest or send pull requests to improve the smart completion
+    algorithm.
 
 g:asyncomplete_force_refresh_on_context_changed *g:asyncomplete_force_refresh_on_context_changed*
 

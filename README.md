@@ -61,6 +61,18 @@ setting `g:asyncomplete_remove_duplicates` to 1.
 let g:asyncomplete_remove_duplicates = 1
 ```
 
+### Smart Completion
+
+To enable fuzzy smart completion:
+
+```vim
+let g:asyncomplete_smart_completion = 1
+let g:asyncomplete_auto_popup = 1
+```
+
+Refer to docs to checks if your vim or neovim supports smart completion.
+Auto popup is required to support smart completion.
+
 #### Preview Window
 
 To disable preview window:

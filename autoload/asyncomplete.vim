@@ -18,7 +18,15 @@ let s:has_popped_up = 0
 let s:complete_timer_ctx = {}
 let s:already_setup = 0
 let s:next_tick_single_exec_metadata = {}
+let s:has_lua = has('lua') || has('nvim-0.2.2')
 let s:supports_getbufinfo = exists('*getbufinfo')
+let s:supports_smart_completion = exists('##TextChangedP')
+let s:asyncomplete_folder = fnamemodify(expand('<sfile>:p:h') . '/../', ':p:h')
+
+function! s:init_lua() abort
+    exec 'lua asyncomplete_folder="' . s:asyncomplete_folder . '"'
+    exec 'luafile ' . s:asyncomplete_folder . '/lua/asyncomplete.lua'
+endfunction
 
 function! asyncomplete#log(...) abort
     if !empty(g:asyncomplete_log_file)
@@ -34,6 +42,9 @@ augroup END
 
 function! asyncomplete#enable_for_buffer() abort
     if !s:already_setup
+        if s:has_lua
+            call s:init_lua()
+        endif
         doautocmd User asyncomplete_setup
         let s:already_setup = 1
     endif
@@ -262,13 +273,15 @@ function! s:remote_refresh(ctx, force) abort
         let l:startpos = l:matchpos[1]
         let l:endpos = l:matchpos[2]
 
-        call asyncomplete#log('core', 's:remote_refresh', l:matchpos, a:ctx)
+        call asyncomplete#log('core', 's:remote_refresh', l:name, l:matchpos, a:ctx)
 
         let l:typed_len = l:endpos - l:startpos
         if l:typed_len == 1
             call add(l:sources_to_notify, l:name)
         elseif has_key(s:matches, l:name) && s:matches[l:name]['refresh']
             call add(l:sources_to_notify, l:name)
+        elseif s:supports_smart_completion()
+            call s:python_refresh_completions(a:ctx)
         endif
     endfor
 
@@ -427,7 +440,11 @@ function! s:python_refresh_completions(ctx) abort
             let l:normalizedcurmatches += [l:e]
         endfor
 
-        let l:filtered_matches += s:filter_completion_items(l:prefix, l:normalizedcurmatches)
+        if s:supports_smart_completion()
+            let l:filtered_matches += l:normalizedcurmatches
+        else
+            let l:filtered_matches += s:filter_completion_items(l:prefix, l:normalizedcurmatches)
+        endif
     endfor
 
     call s:core_complete(a:ctx, l:startcol, l:filtered_matches, s:matches)
@@ -473,7 +490,18 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
         setlocal completeopt+=noselect
     endif
 
-    call complete(a:startcol, a:matches)
+    call asyncomplete#log('core', 's:core_complete')
+
+    let l:candidates = s:supports_smart_completion() ? s:custom_filter_completion_items(a:ctx['typed'][a:startcol-1 : col('.') - 1], a:matches) : a:matches
+    call complete(a:startcol, l:candidates)
+endfunction
+
+function! s:supports_smart_completion() abort
+    return s:supports_smart_completion && g:asyncomplete_smart_completion
+endfunction
+
+function! s:custom_filter_completion_items(prefix, matches) abort
+    return luaeval('asyncomplete.filter_completion_items(_A.prefix, _A.matches)', { 'prefix': a:prefix, 'matches': a:matches })
 endfunction
 
 function! s:complete_timeout(timer) abort
