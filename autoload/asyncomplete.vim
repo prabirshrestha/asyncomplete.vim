@@ -21,7 +21,7 @@ let s:next_tick_single_exec_metadata = {}
 let s:has_lua = has('lua') || has('nvim-0.2.2')
 let s:supports_getbufinfo = exists('*getbufinfo')
 let s:supports_smart_completion = exists('##TextChangedP')
-let s:asyncomplete_folder = fnamemodify(expand('<sfile>:p:h') . '/../', ':p:h')
+let s:asyncomplete_folder = fnamemodify(expand('<sfile>:p:h') . '/../', ':p:h:gs?\\?/?')
 
 function! s:init_lua() abort
     exec 'lua asyncomplete_folder="' . s:asyncomplete_folder . '"'
