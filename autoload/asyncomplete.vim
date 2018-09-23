@@ -435,7 +435,6 @@ function! s:python_refresh_completions(ctx) abort
                 let l:e['word'] = l:item
             else
                 let l:e = copy(l:item)
-                let l:e['word'] = l:e['word']
             endif
             let l:normalizedcurmatches += [l:e]
         endfor
