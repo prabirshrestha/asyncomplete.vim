@@ -126,7 +126,8 @@ endif
 |-------------------------------|----------------------------------------------------------------------------------------------------|
 | Buffer                        | [asyncomplete-buffer.vim](https://github.com/prabirshrestha/asyncomplete-buffer.vim)               |
 | Emoji                         | [asyncomplete-emoji.vim](https://github.com/prabirshrestha/asyncomplete-emoji.vim)                 |
-| Filenames / directories       | [asyncomplete-file.vim](https://github.com/prabirshrestha/asyncomplete-file.vim)                 |
+| Filenames / directories       | [asyncomplete-file.vim](https://github.com/prabirshrestha/asyncomplete-file.vim)                   |
+| [NeoInclude][neoinclude]      | [asyncomplete-neoinclude.vim](https://github.com/kyouryuukunn/asyncomplete-neoinclude.vim)         |
 | Go                            | [asyncomplete-gocode.vim](https://github.com/prabirshrestha/asyncomplete-gocode.vim)               |
 | JavaScript (Flow)             | [asyncomplete-flow.vim](https://github.com/prabirshrestha/asyncomplete-flow.vim)                   |
 | [Neosnippet][neosnippet]      | [asyncomplete-neosnippet.vim](https://github.com/prabirshrestha/asyncomplete-neosnippet.vim)       |
@@ -141,6 +142,7 @@ endif
 | Vim                           | [asyncomplete-necovim.vim](https://github.com/prabirshrestha/asyncomplete-necovim.vim)             |
 
 [neosnippet]:   https://github.com/Shougo/neosnippet.vim
+[neoinclude]:   https://github.com/Shougo/neoinclude.vim
 [tmuxcomplete]: https://github.com/wellle/tmux-complete.vim
 [ultisnips]:    https://github.com/SirVer/ultisnips
 
