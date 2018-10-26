@@ -25,3 +25,5 @@ let g:asyncomplete_force_refresh_on_context_changed = get(g:, 'asyncomplete_forc
 
 " imap <c-space> <Plug>(asyncomplete_force_refresh)
 inoremap <silent> <expr> <Plug>(asyncomplete_force_refresh) asyncomplete#force_refresh()
+" imap <c-l> <Plug>(asyncomplete_force_fzf)
+inoremap <silent> <expr> <Plug>(asyncomplete_force_fzf) asyncomplete#force_fzf()

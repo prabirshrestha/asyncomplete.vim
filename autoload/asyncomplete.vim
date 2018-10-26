@@ -23,6 +23,8 @@ let s:supports_getbufinfo = exists('*getbufinfo')
 let s:supports_smart_completion = exists('##TextChangedP')
 let s:asyncomplete_folder = fnamemodify(expand('<sfile>:p:h') . '/../', ':p:h:gs?\\?/?')
 
+let s:fore_fzf_complete = 0
+
 function! s:init_lua() abort
     exec 'lua asyncomplete_folder="' . s:asyncomplete_folder . '"'
     exec 'luafile ' . s:asyncomplete_folder . '/lua/asyncomplete.lua'
@@ -137,6 +139,11 @@ endfunction
 
 function! asyncomplete#force_refresh() abort
     return asyncomplete#menu_selected() ? "\<c-y>\<c-r>=asyncomplete#_force_refresh()\<CR>" : "\<c-r>=asyncomplete#_force_refresh()\<CR>"
+endfunction
+
+function! asyncomplete#force_fzf() abort
+    let s:fore_fzf_complete = 1
+    return asyncomplete#force_refresh()
 endfunction
 
 function! asyncomplete#_force_refresh() abort
@@ -474,11 +481,13 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
 
     " ignore the request if context has changed
     if (a:ctx != asyncomplete#context()) || (mode() isnot# 'i')
+        let s:fore_fzf_complete = 0
         return 1
     endif
 
     " something selected by user, do not refresh the menu
     if asyncomplete#menu_selected()
+        let s:fore_fzf_complete = 0
         return 0
     endif
 
@@ -491,8 +500,27 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
 
     call asyncomplete#log('core', 's:core_complete')
 
-    let l:candidates = s:supports_smart_completion() ? s:custom_filter_completion_items(a:ctx['typed'][a:startcol-1 : col('.') - 1], a:matches) : a:matches
-    call complete(a:startcol, l:candidates)
+    if s:fore_fzf_complete == 1
+        let s:fore_fzf_complete = 0
+        let l:query = a:ctx['typed'][a:startcol-1 : col('.') - 1]
+        let l:source = map(copy(a:matches), function('MapCandidatesToFzf'))
+        call fzf#vim#complete({
+                    \ 'source':  l:source,
+                    \ 'reducer': {lines -> split(lines[0])[0]},
+                    \ 'options': '--query '.l:query.' +m'})
+    else
+        let l:candidates = s:supports_smart_completion() ? s:custom_filter_completion_items(a:ctx['typed'][a:startcol-1 : col('.') - 1], a:matches) : a:matches
+        call complete(a:startcol, l:candidates)
+    endif
+
+endfunction
+
+function! MapCandidatesToFzf(key, val)
+    if has_key(a:val, 'menu')
+        return a:val['word']."\t".a:val['menu']
+    else
+        return a:val['word']
+    endif
 endfunction
 
 function! s:supports_smart_completion() abort
