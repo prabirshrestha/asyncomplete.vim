@@ -51,7 +51,7 @@ function! asyncomplete#enable_for_buffer() abort
 
     let b:asyncomplete_enable = 1
     if exists('##TextChangedP')
-        augroup ayncomplete
+        augroup asyncomplete
             autocmd! * <buffer>
             autocmd InsertEnter <buffer> call s:remote_insert_enter()
             autocmd InsertLeave <buffer> call s:remote_insert_leave()
@@ -60,7 +60,7 @@ function! asyncomplete#enable_for_buffer() abort
             autocmd FileType <buffer> call s:file_type_changed()
         augroup END
     else
-        augroup ayncomplete
+        augroup asyncomplete
             autocmd! * <buffer>
             autocmd InsertEnter <buffer> call s:remote_insert_enter()
             autocmd InsertLeave <buffer> call s:remote_insert_leave()
