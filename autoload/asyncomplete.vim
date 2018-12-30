@@ -15,6 +15,7 @@ let s:change_timer = -1
 let s:on_changed_p = 0
 let s:last_tick = []
 let s:has_popped_up = 0
+let s:skip_popup = 0
 let s:complete_timer_ctx = {}
 let s:already_setup = 0
 let s:next_tick_single_exec_metadata = {}
@@ -163,6 +164,16 @@ function! asyncomplete#context_changed(ctx) abort
     return getcurpos() != a:ctx['curpos']
 endfunction
 
+function! asyncomplete#close_popup() abort
+  let s:skip_popup = 1
+  return pumvisible() ? "\<C-y>" : ''
+endfunction
+
+function! asyncomplete#cancel_popup() abort
+  let s:skip_popup = 1
+  return pumvisible() ? "\<C-e>" : ''
+endfunction
+
 function! s:change_tick_start() abort
     if s:change_timer != -1
         return
@@ -210,6 +221,11 @@ function! s:on_changed_common() abort
 endfunction
 
 function! s:on_changed() abort
+    if s:skip_popup 
+      let s:skip_popup = 0
+      return
+    endif
+
     let s:on_changed_p = 0
     call s:on_changed_common()
 endfunction
