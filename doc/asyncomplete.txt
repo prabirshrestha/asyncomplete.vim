@@ -79,6 +79,16 @@ g:asyncomplete_log_file                               *g:asyncomplete_log_file*
 
     Log file path.
 
+g:asyncomplete_auto_completeopt                       *g:asyncomplete_auto_completeopt*
+
+    Type: |Number|
+    Default: 1
+
+    Set default `completeopt` options. These are `menuone,noinsert,noselect`.
+    This effectively overwrites what ever the user has in their config file.
+
+    Set to 0 to disable.
+
 ===============================================================================
 3. Global vim configuration                          *asyncomplete-global-config*
 
