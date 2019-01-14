@@ -482,11 +482,8 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
         return 0
     endif
 
-    setlocal completeopt-=longest
-    setlocal completeopt+=menuone
-    setlocal completeopt-=menu
-    if &completeopt !~# 'noinsert\|noselect'
-        setlocal completeopt+=noselect
+    if (g:asyncomplete_auto_completeopt == 1)
+        setl completeopt=menuone,noinsert,noselect
     endif
 
     call asyncomplete#log('core', 's:core_complete')
