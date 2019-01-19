@@ -253,7 +253,7 @@ function! s:get_refresh_pattern(source) abort
 endfunction
 
 function! s:remote_refresh(ctx, force) abort
-    let l:has_popped_up = 0
+    let s:has_popped_up = 0
     if a:force
         call s:notify_sources_to_refresh(s:get_active_sources_for_buffer(), a:ctx)
         return
