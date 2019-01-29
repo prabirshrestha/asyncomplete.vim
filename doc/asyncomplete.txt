@@ -61,6 +61,13 @@ g:asyncomplete_smart_completion                  *g:asyncomplete_smart_completio
     Feel free to suggest or send pull requests to improve the smart completion
     algorithm.
 
+g:asyncomplete_group_candidates                  *g:asyncomplete_group_candidates*
+
+    Type: |Number|
+    Default: 0
+
+    Sort the completion candidates before rendering in ascending order.
+
 g:asyncomplete_force_refresh_on_context_changed *g:asyncomplete_force_refresh_on_context_changed*
 
     Type: |Number|

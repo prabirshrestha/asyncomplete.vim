@@ -489,7 +489,16 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
     call asyncomplete#log('core', 's:core_complete')
 
     let l:candidates = s:supports_smart_completion() ? s:custom_filter_completion_items(a:ctx['typed'][a:startcol-1 : col('.') - 1], a:matches) : a:matches
+
+    if get(g:, 'asyncomplete_group_candidates', 0)
+        let l:candidates = sort(l:candidates, "s:group_candidates_match")
+    endif
+
     call complete(a:startcol, l:candidates)
+endfunction
+
+function! s:group_candidates_match(v1, v2) abort
+    return a:v1['info'] <# a:v2['info'] ? -1 : a:v2['info'] <# a:v1['info'] ? 1 : 0
 endfunction
 
 function! s:supports_smart_completion() abort
