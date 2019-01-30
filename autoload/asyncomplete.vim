@@ -18,6 +18,7 @@ let s:has_popped_up = 0
 let s:complete_timer_ctx = {}
 let s:already_setup = 0
 let s:next_tick_single_exec_metadata = {}
+let s:is_nvim = has('nvim')
 let s:has_lua = has('lua') || has('nvim-0.2.2')
 let s:supports_getbufinfo = exists('*getbufinfo')
 let s:supports_smart_completion = exists('##TextChangedP')
@@ -497,7 +498,9 @@ function! s:supports_smart_completion() abort
 endfunction
 
 function! s:custom_filter_completion_items(prefix, matches) abort
-    return luaeval('asyncomplete.filter_completion_items(_A.prefix, _A.matches)', { 'prefix': a:prefix, 'matches': a:matches })
+    let l:start = s:is_nvim ? 1 : 0
+    let l:last = s:is_nvim ? len(a:matches) : len(a:matches) - 1
+    return luaeval('asyncomplete.filter_completion_items(_A.prefix, _A.matches, _A.start, _A.last)', { 'prefix': a:prefix, 'matches': a:matches, 'start': l:start, 'last': l:last })
 endfunction
 
 function! s:complete_timeout(timer) abort

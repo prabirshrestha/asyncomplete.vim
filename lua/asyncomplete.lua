@@ -33,12 +33,10 @@ else
     end
 end
 
-function module.filter_completion_items(prefix, matches)
+function module.filter_completion_items(prefix, matches, start, last)
     local result = {}
-    local result = {}
-    local index = 0
     local unsorted_matches = {}
-    for i = 1, #matches do
+    for i = start, last do
         local match = matches[i]
         if match ~= nil then
             local word = match['word']
