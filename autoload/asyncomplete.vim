@@ -11,6 +11,7 @@ if !has('timers')
 endif
 
 let s:sources = {}
+let s:previous_candidates = []
 let s:change_timer = -1
 let s:on_changed_p = 0
 let s:last_tick = []
@@ -489,6 +490,13 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
     call asyncomplete#log('core', 's:core_complete')
 
     let l:candidates = s:supports_smart_completion() ? s:custom_filter_completion_items(a:ctx['typed'][a:startcol-1 : col('.') - 1], a:matches) : a:matches
+
+    " no new candidates, do not refresh the menu
+    if pumvisible() && s:previous_candidates == l:candidates
+        return 0
+    endif
+    let s:previous_candidates = l:candidates
+
     call complete(a:startcol, l:candidates)
 endfunction
 
