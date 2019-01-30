@@ -497,6 +497,11 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
     endif
     let s:previous_candidates = l:candidates
 
+    " no candidates, do not refresh the menu
+    if len(l:candidates) == 0
+        return 0
+    endif
+
     call complete(a:startcol, l:candidates)
 endfunction
 
