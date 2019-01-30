@@ -252,13 +252,13 @@ function! s:get_refresh_pattern(source) abort
     return l:refresh_pattern
 endfunction
 
-function! s:get_auto_min_length(source) abort
-    if has_key(a:source, 'auto_min_length')
-        let l:auto_min_length = a:source['auto_min_length']
+function! s:get_min_chars(source) abort
+    if has_key(a:source, 'min_chars')
+        let l:min_chars = a:source['min_chars']
     else
-        let l:auto_min_length = g:asyncomplete_default_auto_min_length
+        let l:min_chars = g:asyncomplete_min_chars
     endif
-    return l:auto_min_length
+    return l:min_chars
 endfunction
 
 function! s:remote_refresh(ctx, force) abort
@@ -278,7 +278,7 @@ function! s:remote_refresh(ctx, force) abort
     for l:name in s:get_active_sources_for_buffer()
         let l:source = s:sources[l:name]
         let l:refresh_pattern = s:get_refresh_pattern(l:source)
-        let l:auto_min_length = s:get_auto_min_length(l:source)
+        let l:min_chars = s:get_min_chars(l:source)
         let l:matchpos = s:matchstrpos(l:typed, l:refresh_pattern)
         let l:startpos = l:matchpos[1]
         let l:endpos = l:matchpos[2]
@@ -286,7 +286,7 @@ function! s:remote_refresh(ctx, force) abort
         call asyncomplete#log('core', 's:remote_refresh', l:name, l:matchpos, a:ctx)
 
         let l:typed_len = l:endpos - l:startpos
-        if l:typed_len == l:auto_min_length
+        if l:typed_len == l:min_chars
             call add(l:sources_to_notify, l:name)
         elseif has_key(s:matches, l:name) && s:matches[l:name]['refresh']
             call add(l:sources_to_notify, l:name)
