@@ -133,7 +133,19 @@ function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
         return 1
     endif
 
-    call s:python_cm_complete(a:name, a:ctx, a:startcol, a:matches, l:refresh, 0)
+    let l:normalizedmatches = []
+
+    for l:item in a:matches
+        let l:e = {}
+        if type(l:item) == type('')
+            let l:e['word'] = l:item
+        else
+            let l:e = copy(l:item)
+        endif
+        let l:normalizedmatches += [l:e]
+    endfor
+
+    call s:python_cm_complete(a:name, a:ctx, a:startcol, l:normalizedmatches, l:refresh, 0)
 endfunction
 
 function! asyncomplete#force_refresh() abort
@@ -429,21 +441,10 @@ function! s:python_refresh_completions(ctx) abort
 
         let l:prefix = a:ctx['typed'][l:startcol-1 : col('.') -1]
 
-        let l:normalizedcurmatches = []
-        for l:item in l:curmatches
-            let l:e = {}
-            if type(l:item) == type('')
-                let l:e['word'] = l:item
-            else
-                let l:e = copy(l:item)
-            endif
-            let l:normalizedcurmatches += [l:e]
-        endfor
-
         if s:supports_smart_completion()
-            let l:filtered_matches += l:normalizedcurmatches
+            let l:filtered_matches += l:curmatches
         else
-            let l:filtered_matches += s:filter_completion_items(l:prefix, l:normalizedcurmatches)
+            let l:filtered_matches += s:filter_completion_items(l:prefix, l:curmatches)
         endif
     endfor
 
