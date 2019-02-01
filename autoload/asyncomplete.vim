@@ -134,7 +134,6 @@ function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
     endif
 
     let l:normalizedmatches = []
-
     for l:item in a:matches
         let l:e = {}
         if type(l:item) == type('')
