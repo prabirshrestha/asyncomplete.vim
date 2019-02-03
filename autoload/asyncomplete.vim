@@ -447,7 +447,7 @@ function! s:python_refresh_completions(ctx) abort
         endif
     endfor
 
-    call s:core_complete(a:ctx, l:startcol, l:filtered_matches, s:matches)
+    call timer_start(g:asyncomplete_popup_delay, {timer->s:core_complete(a:ctx, l:startcol, l:filtered_matches, s:matches)})
 endfunction
 
 function! s:filter_completion_items(prefix, matches) abort
