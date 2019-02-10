@@ -268,6 +268,9 @@ function! s:remote_refresh(ctx, force) abort
     let l:sources_to_notify = []
 
     for l:name in s:get_active_sources_for_buffer()
+        if !has_key(s:sources, l:name)
+            continue
+        endif
         let l:source = s:sources[l:name]
         let l:refresh_pattern = s:get_refresh_pattern(l:source)
         let l:matchpos = s:matchstrpos(l:typed, l:refresh_pattern)
