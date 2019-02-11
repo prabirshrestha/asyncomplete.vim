@@ -11,6 +11,7 @@ if !has('timers')
 endif
 
 let s:already_setup = 0
+let s:sources = {}
 
 function! asyncomplete#log(...) abort
     if !empty(g:asyncomplete_log_file)
@@ -54,6 +55,34 @@ endfunction
 
 function! asyncomplete#disable_for_buffer() abort
     let b:asyncomplete_enable = 0
+endfunction
+
+function! asyncomplete#register_source(info) abort
+    if has_key(s:sources, a:info['name'])
+        call asyncomplete#log('duplicate asyncomplete#register_source', a:info['name'])
+        return -1
+    else
+        let s:sources[a:info['name']] = a:info
+        return 1
+    endif
+endfunction
+
+function! asyncomplete#unregister_source(info_or_server_name) abort
+    if type(a:info) == type({})
+        let l:server_name = a:info['name']
+    else
+        let l:server_name = a:info
+    endif
+    if has_key(s:sources, l:server_name)
+        let l:server = s:sources[l:servier_name]
+        if has_key(l:server, 'unregister')
+            call l:server.unregister()
+        endif
+        unlet s:sources[l:server_name]
+        return 1
+    else
+        return -1
+    endif
 endfunction
 
 function! s:on_change() abort
