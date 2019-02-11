@@ -107,7 +107,6 @@ function! s:on_insert_enter() abort
 endfunction
 
 function! s:on_insert_leave() abort
-    let s:active_source_names = []
 endfunction
 
 function! s:get_active_sources_for_buffer() abort
