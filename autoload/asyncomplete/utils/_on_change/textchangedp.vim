@@ -40,12 +40,10 @@ function! s:on_insert_leave() abort
 endfunction
 
 function! s:on_text_changed_i() abort
-    call asyncomplete#log('i', s:previous_position, getcurpos())
     call s:maybe_notify_on_change()
 endfunction
 
 function! s:on_text_changed_p() abort
-    call asyncomplete#log('p', s:previous_position, getcurpos())
     call s:maybe_notify_on_change()
 endfunction
 
@@ -59,4 +57,3 @@ function! s:maybe_notify_on_change() abort
         endfor
     endif
 endfunction
-

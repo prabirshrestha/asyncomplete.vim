@@ -11,7 +11,6 @@ if !has('timers')
 endif
 
 let s:already_setup = 0
-let s:previous_position = []
 
 function! asyncomplete#log(...) abort
     if !empty(g:asyncomplete_log_file)
