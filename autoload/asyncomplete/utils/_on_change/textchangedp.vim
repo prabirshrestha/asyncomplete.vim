@@ -1,6 +1,7 @@
 let s:callbacks = []
 
 function! asyncomplete#utils#_on_change#textchangedp#init() abort
+    call s:setup_if_required()
     return {
         \ 'name': 'TextChangedP',
         \ 'register': function('s:register'),
@@ -19,10 +20,8 @@ function! s:setup_if_required() abort
 endfunction
 
 function! s:register(cb) abort
-    call s:setup_if_required()
     call add(s:callbacks , a:cb)
 endfunction
-
 
 function! s:unregister(obj, cb) abort
     " TODO: remove from s:callbacks
