@@ -27,10 +27,21 @@ function! s:setup_if_required() abort
         call asyncomplete#log('initializing asyncomplete manager complete', s:manager['name'])
 
         " register asyncomplete change manager
-        call asyncomplete#log('initializing asyncomplete change manager', g:asyncomplete_change_manager)
-        execute 'let s:on_change_manager = function("'. g:asyncomplete_change_manager  .'")()'
-        call s:on_change_manager.register(function('s:on_change'))
-        call asyncomplete#log('initializing asyncomplete change manager complete', s:on_change_manager['name'])
+        for l:change_manager in g:asyncomplete_change_manager
+            call asyncomplete#log('initializing asyncomplete change manager', l:change_manager)
+            if type(l:change_manager) == type('')
+                execute 'let s:on_change_manager = function("'. l:change_manager  .'")()'
+            else
+                let s:on_change_manager = l:change_manager()
+            endif
+            if has_key(s:on_change_manager, 'error')
+                call asyncomplete#log('initializing asyncomplete change manager failed', s:on_change_manager['name'], s:on_change_manager['error'])
+            else
+                call s:on_change_manager.register(function('s:on_change'))
+                call asyncomplete#log('initializing asyncomplete change manager complete', s:on_change_manager['name'])
+                break
+            endif
+        endfor
 
         doautocmd User asyncomplete_setup
         let s:already_setup = 1

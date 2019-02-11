@@ -13,7 +13,7 @@ if get(g:, 'asyncomplete_enable_for_all', 1)
 endif
 
 let g:asyncomplete_manager = get(g:, 'asyncomplete_manager', 'asyncomplete#managers#vim#init')
-let g:asyncomplete_change_manager = get(g:, 'asyncomplete_change_manager', exists('##TextChangedP') ? 'asyncomplete#utils#_on_change#textchangedp#init' : 'asyncomplete#utils#_on_change#timer#init')
+let g:asyncomplete_change_manager = get(g:, 'asyncomplete_change_manager', ['asyncomplete#utils#_on_change#textchangedp#init', 'asyncomplete#utils#_on_change#timer#init'])
 
 let g:asyncomplete_auto_completeopt = get(g:, 'asyncomplete_auto_completeopt', 1)
 let g:asyncomplete_auto_popup = get(g:, 'asyncomplete_auto_popup', 1)
@@ -22,7 +22,6 @@ let g:asyncomplete_default_refresh_pattern = get(g:, 'asyncomplete_default_refre
 let g:asyncomplete_log_file = get(g:, 'asyncomplete_log_file', '')
 let g:asyncomplete_smart_completion = get(g:, 'asyncomplete_smart_completion', s:has_lua && exists('##TextChangedP'))
 let g:asyncomplete_remove_duplicates = get(g:, 'asyncomplete_remove_duplicates', 0)
-
 
 " Setting it to true may slow/hang vim especially on slow are sources such as asyncomplete-lsp.vim
 " use asyncomplete_force_refersh to retrive the latest autocomplete results instead.
