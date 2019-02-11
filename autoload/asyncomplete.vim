@@ -93,6 +93,7 @@ endfunction
 
 function! s:on_insert_enter() abort
     call s:get_active_sources_for_buffer() " call to cache
+    call s:update_trigger_characters()
 endfunction
 
 function! s:on_insert_leave() abort
@@ -144,4 +145,39 @@ function! s:get_active_sources_for_buffer() abort
     call asyncomplete#log('core', 'active source for buffer', bufnr('%'), b:asyncomplete_active_sources)
 
     return b:asyncomplete_active_sources
+endfunction
+
+function! s:update_trigger_characters() abort
+    if exists('b:asyncomplete_triggers')
+        " triggers were cached for buffer
+        return b:asyncomplete_triggers
+    endif
+    let b:asyncomplete_triggers = {} " { char: { 'sourcea': 1, 'sourceb': 2 } }
+
+    for l:source_name in s:get_active_sources_for_buffer()
+        let l:source_info = s:sources[l:source_name]
+        if has_key(l:source_info, 'triggers') && has_key(l:source_info['triggers'], &filetype)
+            let l:triggers = l:source_info['triggers'][&filetype]
+        elseif has_key(l:source_info, 'triggers') && has_key(l:source_info['triggers'], '*')
+            let l:triggers = l:source_info['triggers']['*']
+        elseif has_key(g:asyncomplete_triggers, &filetype)
+            let l:triggers = g:asyncomplete_triggers[&filetype]
+        elseif has_key(g:asyncomplete_triggers, '*')
+            let l:triggers = g:asyncomplete_triggers['*']
+        else
+            let l:triggers = []
+        endif
+
+        for l:trigger in l:triggers
+            let l:last_char = l:trigger[len(l:trigger) -1]
+            if !has_key(b:asyncomplete_triggers, l:last_char)
+                let b:asyncomplete_triggers[l:last_char] = {}
+            endif
+            if !has_key(b:asyncomplete_triggers[l:last_char], l:source_name)
+                let b:asyncomplete_triggers[l:last_char][l:source_name] = []
+            endif
+            call add(b:asyncomplete_triggers[l:last_char][l:source_name], l:trigger)
+        endfor
+    endfor
+    call asyncomplete#log('core', 'trigger characters for buffer', bufnr('%'), b:asyncomplete_triggers)
 endfunction
