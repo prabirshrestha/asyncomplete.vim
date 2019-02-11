@@ -12,6 +12,7 @@ endif
 
 let s:already_setup = 0
 let s:sources = {}
+let s:matches = {} " { server_name: { incomplete: 1, startcol: 0, items: []  } }
 
 function! asyncomplete#log(...) abort
     if !empty(g:asyncomplete_log_file)
@@ -107,6 +108,7 @@ function! s:on_insert_enter() abort
 endfunction
 
 function! s:on_insert_leave() abort
+    let s:matches = {}
 endfunction
 
 function! s:get_active_sources_for_buffer() abort
@@ -195,23 +197,39 @@ function! s:on_change() abort
     if s:should_skip() | return | endif
 
     let l:line = getline('.')
-    let l:curpos = getcurpos()
 
-    let l:last_char = l:line[l:curpos[2] - 2]
+    let l:ctx = asyncomplete#context()
+    let l:startcol = l:ctx['col']
+    let l:last_char = l:ctx['typed'][l:startcol - 2]
 
+    let l:sources_to_notify = {}
     if has_key(b:asyncomplete_triggers, l:last_char)
         " TODO: also check for multiple chars instead of just last chars for
         " languages such as cpp which uses -> and ::
-        call s:trigger({ 'auto': 1, 'trigger_character': l:last_char, 'sources': keys(b:asyncomplete_triggers[l:last_char]) })
-    else
-        call asyncomplete#log('core', 'ignore_on_change', getline('.'))
+        for l:source_name in keys(b:asyncomplete_triggers[l:last_char])
+            if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['startcol'] != l:startcol
+                let l:sources_to_notify[l:source_name] = 1
+                let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'notstarted', 'items': [] }
+            endif
+        endfor
+    endif
+
+    for l:source_name in b:asyncomplete_active_sources
+        if !has_key(l:sources_to_notify, l:source_name)
+            " loop left and find the start of the word and set it as the startcol for the source
+            " let l:sources_to_notify[l:source_name] = 1
+            " let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'notstarted', 'items': [] }
+        endif
+    endfor
+
+    if !empty(l:sources_to_notify)
+        call s:trigger(keys(l:sources_to_notify), l:ctx)
     endif
 endfunction
 
-function! s:trigger(opt) abort
-    let l:ctx = asyncomplete#context()
+function! s:trigger(sources_to_notify, ctx) abort
     " send cancellation request if supported
-    call asyncomplete#log('core', 's:trigger', l:ctx, a:opt)
+    call asyncomplete#log('s:trigger', a:sources_to_notify, s:matches, a:ctx)
 endfunction
 
 function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
