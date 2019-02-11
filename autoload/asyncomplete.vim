@@ -91,6 +91,16 @@ function! asyncomplete#unregister_source(info_or_server_name) abort
     endif
 endfunction
 
+function! asyncomplete#context() abort
+    let l:ret = {'bufnr':bufnr('%'), 'curpos':getcurpos(), 'changedtick':b:changedtick}
+    let l:ret['lnum'] = l:ret['curpos'][1]
+    let l:ret['col'] = l:ret['curpos'][2]
+    let l:ret['filetype'] = &filetype
+    let l:ret['filepath'] = expand('%:p')
+    let l:ret['typed'] = strpart(getline(l:ret['lnum']),0,l:ret['col']-1)
+    return l:ret
+endfunction
+
 function! s:on_insert_enter() abort
     call s:get_active_sources_for_buffer() " call to cache
     call s:update_trigger_characters()
@@ -98,14 +108,6 @@ endfunction
 
 function! s:on_insert_leave() abort
     let s:active_source_names = []
-endfunction
-
-function! s:on_change() abort
-    if mode() isnot# 'i'
-        return
-    endif
-
-    call asyncomplete#log('core', 'on_change', getline('.'), getcurpos())
 endfunction
 
 function! s:get_active_sources_for_buffer() abort
@@ -180,4 +182,39 @@ function! s:update_trigger_characters() abort
         endfor
     endfor
     call asyncomplete#log('core', 'trigger characters for buffer', bufnr('%'), b:asyncomplete_triggers)
+endfunction
+
+function! s:should_skip() abort
+    if mode() isnot# 'i' || !b:asyncomplete_enable
+        return 1
+    else
+        return 0
+    endif
+endfunction
+
+function! s:on_change() abort
+    if s:should_skip() | return | endif
+
+    let l:line = getline('.')
+    let l:curpos = getcurpos()
+
+    let l:last_char = l:line[l:curpos[2] - 2]
+
+    if has_key(b:asyncomplete_triggers, l:last_char)
+        " TODO: also check for multiple chars instead of just last chars for
+        " languages such as cpp which uses -> and ::
+        call s:trigger({ 'auto': 1, 'trigger_character': l:last_char, 'sources': keys(b:asyncomplete_triggers[l:last_char]) })
+    else
+        call asyncomplete#log('core', 'ignore_on_change', getline('.'))
+    endif
+endfunction
+
+function! s:trigger(opt) abort
+    let l:ctx = asyncomplete#context()
+    " send cancellation request if supported
+    call asyncomplete#log('core', 's:trigger', l:ctx, a:opt)
+endfunction
+
+function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
+    let l:incomplete = a:0 > 0 ? a:1 : 0
 endfunction
