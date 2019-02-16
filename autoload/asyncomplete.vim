@@ -269,6 +269,7 @@ function! s:remote_refresh(ctx, force) abort
 
     for l:name in s:get_active_sources_for_buffer()
         if !has_key(s:sources, l:name)
+            call asyncomplete#log('core', 's:remote_refresh', l:name, 'ignored')
             continue
         endif
         let l:source = s:sources[l:name]
