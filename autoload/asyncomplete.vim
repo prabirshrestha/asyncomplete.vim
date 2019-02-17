@@ -444,11 +444,14 @@ function! s:python_refresh_completions(ctx) abort
             let l:normalizedcurmatches += [l:e]
         endfor
 
-        if s:supports_smart_completion()
-            let l:filtered_matches += l:normalizedcurmatches
+        if has_key(s:sources[l:name], 'filter')
+            let l:FilterFunc = s:sources[l:name]['filter']
+        elseif s:supports_smart_completion()
+            let l:FilterFunc = function('s:custom_filter_completion_items')
         else
-            let l:filtered_matches += s:filter_completion_items(l:prefix, l:normalizedcurmatches)
+            let l:FilterFunc = function('s:filter_completion_items')
         endif
+        let l:filtered_matches += l:FilterFunc(l:prefix, l:normalizedcurmatches)
     endfor
 
     call s:core_complete(a:ctx, l:startcol, l:filtered_matches, s:matches)
@@ -493,8 +496,7 @@ function! s:core_complete(ctx, startcol, matches, allmatches) abort
 
     call asyncomplete#log('core', 's:core_complete')
 
-    let l:candidates = s:supports_smart_completion() ? s:custom_filter_completion_items(a:ctx['typed'][a:startcol-1 : col('.') - 1], a:matches) : a:matches
-    call complete(a:startcol, l:candidates)
+    call complete(a:startcol, a:matches)
 endfunction
 
 function! s:supports_smart_completion() abort
