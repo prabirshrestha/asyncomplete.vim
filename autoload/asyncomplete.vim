@@ -196,8 +196,6 @@ endfunction
 function! s:on_change() abort
     if s:should_skip() | return | endif
 
-    let l:line = getline('.')
-
     let l:ctx = asyncomplete#context()
     let l:startcol = l:ctx['col']
     let l:last_char = l:ctx['typed'][l:startcol - 2]
