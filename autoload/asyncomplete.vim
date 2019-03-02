@@ -70,6 +70,18 @@ function! asyncomplete#register_source(info) abort
         return -1
     else
         let s:sources[a:info['name']] = a:info
+        if has_key(a:info, 'events') && has_key(a:info, 'on_event')
+            execute 'augroup asyncomplete_source_event_' . a:info['name']
+            for l:event in a:info['events']
+                let l:exec =  'if get(b:,"asyncomplete_enable",0) | call s:notify_event_to_source("' . a:info['name'] . '", "'.l:event.'",asyncomplete#context()) | endif'
+                if type(l:event) == type('')
+                    execute 'au ' . l:event . ' * ' . l:exec
+                elseif type(l:event) == type([])
+                    execute 'au ' . join(l:event,' ') .' ' .  l:exec
+                endif
+            endfor
+            execute 'augroup end'
+        endif
         return 1
     endif
 endfunction
@@ -293,7 +305,7 @@ function! asyncomplete#_force_refresh() abort
     let l:startcol = l:ctx['col']
     let l:last_char = l:ctx['typed'][l:startcol - 2]
 
-    " loop left and find the start of the word and set it as the startcol for the source instead of refresh_pattern
+    " loop left and find the start of the word or trigger chars and set it as the startcol for the source instead of refresh_pattern
     let l:refresh_pattern = '\(\k\+$\|\.$\|>$\|:$\)'
     let [l:_, l:startpos, l:endpos] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
     let l:startcol = l:startpos
@@ -375,4 +387,15 @@ function! asyncomplete#menu_selected() abort
     " current_selected item
     " if v:completed_item is empty, no item is selected
     return pumvisible() && !empty(v:completed_item)
+endfunction
+
+function! s:notify_event_to_source(name, event, ctx) abort
+    try
+        if has_key(s:sources, a:name)
+            call s:sources[a:name].on_event(s:sources[a:name], a:ctx, a:event)
+        endif
+    catch
+        call asyncomplete#log('core', 's:notify_event_to_source', 'error', v:exception)
+        return
+    endtry
 endfunction
