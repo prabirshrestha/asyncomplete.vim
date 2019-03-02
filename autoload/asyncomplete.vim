@@ -312,6 +312,11 @@ function! s:recompute_pum(...) abort
 
     call asyncomplete#log('s:recompute_pum')
 
+    if asyncomplete#menu_selected()
+        call asyncomplete#log('s:recomputed_pum', 'ignorning refresh pum due to menu selection')
+        return
+    endif
+
     let l:startcols = []
     for l:match in values(s:matches)
         let l:startcols += [l:match['startcol']]
