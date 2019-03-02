@@ -265,22 +265,24 @@ function! asyncomplete#complete(name, ctx, startcol, items, ...) abort
         return
     endif
 
+    let l:matches = s:matches[a:name]
+    let l:matches['items'] = s:normalize_items(a:items)
+    let l:matches['refresh'] = l:refresh
+    let l:matches['startcol'] = a:startcol - 1
+    let l:matches['status'] = 'success'
+
+    call s:update_pum()
+endfunction
+
+function! s:normalize_items(items) abort
     if len(a:items) > 0 && type(a:items[0]) ==# type('')
         let l:items = []
         for l:item in a:items
             let l:items += [{'word': l:item }]
         endfor
     else
-        let l:items = a:items
+        return a:items
     endif
-
-    let l:matches = s:matches[a:name]
-    let l:matches['items'] = l:items
-    let l:matches['refresh'] = l:refresh
-    let l:matches['startcol'] = a:startcol - 1
-    let l:matches['status'] = 'success'
-
-    call s:update_pum()
 endfunction
 
 function! asyncomplete#force_refresh() abort
@@ -290,6 +292,7 @@ endfunction
 function! asyncomplete#_force_refresh() abort
     if s:should_skip() | return | endif
     " TODO: force trigger
+    return ''
 endfunction
 
 function! s:update_pum() abort
