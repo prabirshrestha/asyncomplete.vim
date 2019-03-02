@@ -12,7 +12,7 @@ endif
 
 let s:already_setup = 0
 let s:sources = {}
-let s:matches = {} " { server_name: { incomplete: 1, startcol: 0, items: []  } }
+let s:matches = {} " { server_name: { incomplete: 1, startcol: 0, items: [], refresh: 0, status: 'idle|pending|success|failure', ctx: ctx } }
 
 function! asyncomplete#log(...) abort
     if !empty(g:asyncomplete_log_file)
@@ -205,31 +205,152 @@ function! s:on_change() abort
         " TODO: also check for multiple chars instead of just last chars for
         " languages such as cpp which uses -> and ::
         for l:source_name in keys(b:asyncomplete_triggers[l:last_char])
-            if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['startcol'] != l:startcol
+            if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['startcol'] != l:startcol " todo: different line check
                 let l:sources_to_notify[l:source_name] = 1
-                let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'notstarted', 'items': [] }
+                let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
             endif
         endfor
     endif
 
-    for l:source_name in b:asyncomplete_active_sources
-        if !has_key(l:sources_to_notify, l:source_name)
-            " loop left and find the start of the word and set it as the startcol for the source
-            " let l:sources_to_notify[l:source_name] = 1
-            " let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'notstarted', 'items': [] }
-        endif
-    endfor
+    " loop left and find the start of the word and set it as the startcol for the source instead of refresh_pattern
+    let l:refresh_pattern = '\(\k\+$\|\.$\|>$\|:$\)'
+    let [l:_, l:startpos, l:endpos] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
+    let l:startcol = l:startpos
+
+    if l:startpos > -1
+        for l:source_name in b:asyncomplete_active_sources
+            if !has_key(l:sources_to_notify, l:source_name)
+                if has_key(s:matches, l:source_name) && s:matches[l:source_name]['startcol'] ==# l:startcol " todo different line check
+                    continue
+                endif
+                let l:sources_to_notify[l:source_name] = 1
+                let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
+            endif
+        endfor
+    endif
 
     if !empty(l:sources_to_notify)
         call s:trigger(keys(l:sources_to_notify), l:ctx)
     endif
+    call s:update_pum()
 endfunction
 
 function! s:trigger(sources_to_notify, ctx) abort
     " send cancellation request if supported
-    call asyncomplete#log('s:trigger', a:sources_to_notify, s:matches, a:ctx)
+    for l:source_name in a:sources_to_notify
+        let l:matches = s:matches[l:source_name]
+        call asyncomplete#log(l:matches)
+        if l:matches['refresh'] || l:matches['status'] == 'idle' || l:matches['status'] == 'failure'
+            let l:matches['status'] = 'pending'
+            try
+                " TODO: check for min chars
+                call asyncomplete#log('s:trigger', l:source_name, s:matches[l:source_name], a:ctx)
+                call s:sources[l:source_name].completor(s:sources[l:source_name], a:ctx)
+            catch
+                let l:matches['status'] = 'failure'
+                call asyncomplete#log('core', 's:trigger', 'error', v:exception)
+                continue
+            endtry
+        endif
+    endfor
 endfunction
 
-function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
-    let l:incomplete = a:0 > 0 ? a:1 : 0
+function! asyncomplete#complete(name, ctx, startcol, items, ...) abort
+    let l:refresh = a:0 > 0 ? a:1 : 0
+    call asyncomplete#log('asyncomplete#complete', a:name, a:ctx, a:startcol, l:refresh, a:items)
+    let l:ctx = asyncomplete#context()
+    if !has_key(s:matches, a:name) || l:ctx['lnum'] != a:ctx['lnum'] " TODO: handle more context changes
+        call asyncomplete#log('context changed ... ignoring')
+        call s:update_pum()
+        return
+    endif
+
+    if len(a:items) > 0 && type(a:items[0]) ==# type('')
+        let l:items = []
+        for l:item in a:items
+            let l:items += [{'word': l:item }]
+        endfor
+    else
+        let l:items = a:items
+    endif
+
+    let l:matches = s:matches[a:name]
+    let l:matches['items'] = l:items
+    let l:matches['refresh'] = l:refresh
+    let l:matches['startcol'] = a:startcol - 1
+    let l:matches['status'] = 'success'
+
+    call s:update_pum()
+endfunction
+
+function! asyncomplete#force_refresh() abort
+    return asyncomplete#menu_selected() ? "\<c-y>\<c-r>=asyncomplete#_force_refresh()\<CR>" : "\<c-r>=asyncomplete#_force_refresh()\<CR>"
+endfunction
+
+function! asyncomplete#_force_refresh() abort
+    if s:should_skip() | return | endif
+    " TODO: force trigger
+endfunction
+
+function! s:update_pum() abort
+    if exists('s:update_pum_timer')
+        call timer_stop(s:update_pum_timer)
+        unlet s:update_pum_timer
+    endif
+    call asyncomplete#log('s:update_pum')
+    let s:update_pum_timer = timer_start(20, function('s:recompute_pum'))
+endfunction
+
+function! s:recompute_pum(...) abort
+    if s:should_skip() | return | endif
+
+    " TODO: add support for remote recomputation of complete items,
+    " Ex: heavy computation such as fuzzy search can happen in a python thread
+
+    call asyncomplete#log('s:recompute_pum')
+
+    let l:startcols = []
+    for l:match in values(s:matches)
+        let l:startcols += [l:match['startcol']]
+    endfor
+
+    let l:ctx = asyncomplete#context()
+
+    let l:startcol = min(l:startcols)
+    let l:base = l:ctx['typed'][l:startcol:]
+
+    let l:items = []
+    for [l:source_name, l:match] in items(s:matches)
+        let l:curstartcol = l:match['startcol']
+        let l:curitems = l:match['items']
+
+        if l:curstartcol > l:ctx['col']
+            " wrong start col
+            call asyncomplete#log('s:recompute_pum', 'ignoring due to wrong start col', l:curstartcol, l:ctx['col'])
+            continue
+        endif
+
+        let l:normalizedcuritems = []
+        for l:item in l:curitems
+            if l:item['word'] =~ '^' . l:base
+                let l:normalizedcuritems += [l:item]
+            endif
+        endfor
+
+        let l:items += l:normalizedcuritems
+    endfor
+
+    if (g:asyncomplete_auto_completeopt == 1)
+        setl completeopt=menuone,noinsert,noselect
+    endif
+
+    call asyncomplete#log(l:startcol + 1, l:items)
+    call complete(l:startcol + 1, l:items)
+endfunction
+
+function! asyncomplete#menu_selected() abort
+    " when the popup menu is visible, v:completed_item will be the
+    " current_selected item
+    " if v:completed_item is empty, no item is selected
+    return pumvisible() && !empty(v:completed_item)
 endfunction

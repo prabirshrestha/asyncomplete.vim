@@ -9,3 +9,13 @@ function! asyncomplete#utils#find_nearest_parent_directory(path, directoryname) 
         return ''
     endif
 endfunction
+
+if exists('*matchstrpos')
+    function! asyncomplete#utils#matchstrpos(expr, pattern) abort
+        return matchstrpos(a:expr, a:pattern)
+    endfunction
+else
+    function! asyncomplete#utils#matchstrpos(expr, pattern) abort
+        return [matchstr(a:expr, a:pattern), match(a:expr, a:pattern), matchend(a:expr, a:pattern)]
+    endfunction
+endif
