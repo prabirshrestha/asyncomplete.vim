@@ -353,33 +353,54 @@ function! s:recompute_pum(...) abort
     let l:startcol = min(l:startcols)
     let l:base = l:ctx['typed'][l:startcol:]
 
-    let l:items = []
+    let l:matches_to_filter = {}
     for [l:source_name, l:match] in items(s:matches)
         let l:curstartcol = l:match['startcol']
         let l:curitems = l:match['items']
 
         if l:curstartcol > l:ctx['col']
-            " wrong start col
             call asyncomplete#log('s:recompute_pum', 'ignoring due to wrong start col', l:curstartcol, l:ctx['col'])
             continue
+        else
+            let l:matches_to_filter[l:source_name] = l:match
         endif
+    endfor
 
-        let l:normalizedcuritems = []
-        for l:item in l:curitems
-            if l:item['word'] =~ '^' . l:base
-                let l:normalizedcuritems += [l:item]
+    " TODO: allow users to pass custom filter function. lock the api before making this public.
+    " Everything in this function should be treated as immutable. filter function shouldn't mutate.
+    call s:default_filter({ 'ctx': l:ctx, 'base': l:base, 'startcol': l:startcol, 'matches': l:matches_to_filter  })
+endfunction
+
+function! s:default_filter(options) abort
+    let l:items = []
+    for [l:source_name, l:matches] in items(a:options['matches'])
+        for l:item in l:matches['items']
+            if l:item['word'] =~ '^' . a:options['base']
+                call add(l:items, l:item)
             endif
         endfor
-
-        let l:items += l:normalizedcuritems
     endfor
+
+    call s:set_pum(a:options['startcol'], l:items)
+endfunction
+
+function! s:set_pum(startcol, items) abort
+    " TODO: handle cases where this is called asynchronsouly
+    if s:should_skip() | return | endif
+
+    call asyncomplete#log('s:set_pum')
+
+    if asyncomplete#menu_selected()
+        call asyncomplete#log('s:set_pum', 'ignorning set pum due to menu selection')
+        return
+    endif
 
     if (g:asyncomplete_auto_completeopt == 1)
         setl completeopt=menuone,noinsert,noselect
     endif
 
-    call asyncomplete#log(l:startcol + 1, l:items)
-    call complete(l:startcol + 1, l:items)
+    call asyncomplete#log(a:startcol + 1, a:items)
+    call complete(a:startcol + 1, a:items)
 endfunction
 
 function! asyncomplete#menu_selected() abort
