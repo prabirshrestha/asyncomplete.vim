@@ -229,22 +229,19 @@ function! s:on_change() abort
         endfor
     endif
 
-    if !empty(l:sources_to_notify)
-        call s:trigger(keys(l:sources_to_notify), l:ctx)
-    endif
+    call s:trigger(l:ctx)
     call s:update_pum()
 endfunction
 
-function! s:trigger(sources_to_notify, ctx) abort
+function! s:trigger(ctx) abort
     " send cancellation request if supported
-    for l:source_name in a:sources_to_notify
-        let l:matches = s:matches[l:source_name]
-        call asyncomplete#log(l:matches)
+    for [l:source_name, l:matches] in items(s:matches)
+        call asyncomplete#log('core', 's:trigger', l:matches)
         if l:matches['refresh'] || l:matches['status'] == 'idle' || l:matches['status'] == 'failure'
             let l:matches['status'] = 'pending'
             try
                 " TODO: check for min chars
-                call asyncomplete#log('s:trigger', l:source_name, s:matches[l:source_name], a:ctx)
+                call asyncomplete#log('core', 's:trigger.completor()', l:source_name, s:matches[l:source_name], a:ctx)
                 call s:sources[l:source_name].completor(s:sources[l:source_name], a:ctx)
             catch
                 let l:matches['status'] = 'failure'
@@ -291,7 +288,24 @@ endfunction
 
 function! asyncomplete#_force_refresh() abort
     if s:should_skip() | return | endif
-    " TODO: force trigger
+
+    let l:ctx = asyncomplete#context()
+    let l:startcol = l:ctx['col']
+    let l:last_char = l:ctx['typed'][l:startcol - 2]
+
+    " loop left and find the start of the word and set it as the startcol for the source instead of refresh_pattern
+    let l:refresh_pattern = '\(\k\+$\|\.$\|>$\|:$\)'
+    let [l:_, l:startpos, l:endpos] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
+    let l:startcol = l:startpos
+
+    let s:matches = {}
+
+    for l:source_name in b:asyncomplete_active_sources
+        let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
+    endfor
+
+    call s:trigger(l:ctx)
+    call s:update_pum()
     return ''
 endfunction
 
