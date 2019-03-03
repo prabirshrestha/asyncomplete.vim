@@ -17,7 +17,7 @@ if !has('timers')
 endif
 
 let s:already_setup = 0
-let s:previous_sources = {}
+let s:previous_candidates = {}
 let s:sources = {}
 let s:matches = {} " { server_name: { incomplete: 1, startcol: 0, items: [], refresh: 0, status: 'idle|pending|success|failure', ctx: ctx } }
 
