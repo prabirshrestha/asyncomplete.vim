@@ -16,6 +16,7 @@ let g:asyncomplete_triggers = get(g:, 'asyncomplete_triggers', {'*': ['.', '>', 
 
 let g:asyncomplete_auto_completeopt = get(g:, 'asyncomplete_auto_completeopt', 1)
 let g:asyncomplete_auto_popup = get(g:, 'asyncomplete_auto_popup', 1)
+let g:asyncomplete_popup_delay = get(g:, 'asyncomplete_popup_delay', 30)
 let g:asyncomplete_log_file = get(g:, 'asyncomplete_log_file', '')
 
 inoremap <silent> <expr> <Plug>(asyncomplete_force_refresh) asyncomplete#force_refresh()
