@@ -332,7 +332,7 @@ function! s:update_pum() abort
         unlet s:update_pum_timer
     endif
     call asyncomplete#log('s:update_pum')
-    let s:update_pum_timer = timer_start(20, function('s:recompute_pum'))
+    let s:update_pum_timer = timer_start(30, function('s:recompute_pum'))
 endfunction
 
 function! s:recompute_pum(...) abort
