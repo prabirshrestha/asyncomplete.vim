@@ -208,6 +208,10 @@ endfunction
 function! s:on_change() abort
     if s:should_skip() | return | endif
 
+    if !g:asyncomplete_auto_popup
+        return
+    endif
+
     let l:ctx = asyncomplete#context()
     let l:startcol = l:ctx['col']
     let l:last_char = l:ctx['typed'][l:startcol - 2]
@@ -369,7 +373,7 @@ function! s:recompute_pum(...) abort
 
     " TODO: allow users to pass custom filter function. lock the api before making this public.
     " Everything in this function should be treated as immutable. filter function shouldn't mutate.
-    call s:default_filter({ 'ctx': l:ctx, 'base': l:base, 'startcol': l:startcol, 'matches': l:matches_to_filter  })
+    call s:default_filter({ 'ctx': l:ctx, 'base': l:base, 'startcol': l:startcol, 'matches': l:matches_to_filter })
 endfunction
 
 function! s:default_filter(options) abort
