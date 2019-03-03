@@ -51,6 +51,15 @@ inoremap <silent><expr> <TAB>
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 ```
 
+### Popup delay
+By default asyncomplete will show the autocomplete popup menu after a 30ms
+delay. Change this value to cause the popup to show more or less quickly between
+keystrokes.
+
+```vim
+let g:asyncomplete_popup_delay = 30
+```
+
 ### Remove duplicates
 
 If you have many sources enabled (especially the buffer source), it might be
