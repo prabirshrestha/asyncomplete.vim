@@ -22,11 +22,6 @@ let s:matches = {} " { server_name: { incomplete: 1, startcol: 0, items: [], ref
 
 function! s:setup_if_required() abort
     if !s:already_setup
-        " register asyncomplete manager
-        call asyncomplete#log('core', 'initializing asyncomplete manager', g:asyncomplete_manager)
-        execute 'let s:manager = function("'. g:asyncomplete_manager  .'")()'
-        call asyncomplete#log('core', 'initializing asyncomplete manager complete', s:manager['name'])
-
         " register asyncomplete change manager
         for l:change_manager in g:asyncomplete_change_manager
             call asyncomplete#log('core', 'initializing asyncomplete change manager', l:change_manager)
