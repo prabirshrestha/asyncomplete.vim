@@ -221,7 +221,7 @@ function! s:on_change() abort
         " TODO: also check for multiple chars instead of just last chars for
         " languages such as cpp which uses -> and ::
         for l:source_name in keys(b:asyncomplete_triggers[l:last_char])
-            if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['startcol'] != l:startcol " todo: different line check
+            if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['ctx']['lnum'] != l:ctx['lnum'] || s:matches[l:source_name]['startcol'] != l:startcol
                 let l:sources_to_notify[l:source_name] = 1
                 let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
             endif
@@ -236,7 +236,7 @@ function! s:on_change() abort
     if l:startpos > -1
         for l:source_name in b:asyncomplete_active_sources
             if !has_key(l:sources_to_notify, l:source_name)
-                if has_key(s:matches, l:source_name) && s:matches[l:source_name]['startcol'] ==# l:startcol " todo different line check
+                if has_key(s:matches, l:source_name) && s:matches[l:source_name]['ctx']['lnum'] ==# l:ctx['lnum'] && s:matches[l:source_name]['startcol'] ==# l:startcol
                     continue
                 endif
                 let l:sources_to_notify[l:source_name] = 1
