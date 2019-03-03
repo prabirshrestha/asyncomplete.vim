@@ -367,14 +367,21 @@ function! s:recompute_pum(...) abort
         endif
     endfor
 
-    " TODO: allow users to pass custom filter function. lock the api before making this public.
-    " Everything in this function should be treated as immutable. filter function shouldn't mutate.
-    call s:default_filter({ 'ctx': l:ctx, 'base': l:base, 'startcol': l:startcol, 'matches': l:matches_to_filter })
+    let l:filter_ctx = extend({
+        \ 'base': l:base,
+        \ 'startcol': l:startcol,
+        \ }, l:ctx)
+
+    if empty(g:asyncomplete_preprocessor)
+        call s:default_preprocessor(l:filter_ctx, l:matches_to_filter)
+    else
+        call g:asyncomplete_preprocessor[0](l:filter_ctx, l:matches_to_filter)
+    endif
 endfunction
 
-function! s:default_filter(options) abort
+function! s:default_preprocessor(options, matches) abort
     let l:items = []
-    for [l:source_name, l:matches] in items(a:options['matches'])
+    for [l:source_name, l:matches] in items(a:matches)
         for l:item in l:matches['items']
             if l:item['word'] =~ '^' . a:options['base']
                 call add(l:items, l:item)
@@ -382,17 +389,17 @@ function! s:default_filter(options) abort
         endfor
     endfor
 
-    call s:set_pum(a:options['startcol'], l:items)
+    call asyncomplete#preprocess_complete(a:options, l:items)
 endfunction
 
-function! s:set_pum(startcol, items) abort
-    " TODO: handle cases where this is called asynchronsouly
+function! asyncomplete#preprocess_complete(ctx, items)
+    " TODO: handle cases where this is called asynchronsouly. Currently not supported
     if s:should_skip() | return | endif
 
-    call asyncomplete#log('core', 's:set_pum')
+    call asyncomplete#log('core', 'asyncomplete#preprocess_complete')
 
     if asyncomplete#menu_selected()
-        call asyncomplete#log('core', 's:set_pum', 'ignorning set pum due to menu selection')
+        call asyncomplete#log('core', 'asyncomplete#preprocess_complete', 'ignorning pum update due to menu selection')
         return
     endif
 
@@ -400,8 +407,8 @@ function! s:set_pum(startcol, items) abort
         setl completeopt=menuone,noinsert,noselect
     endif
 
-    call asyncomplete#log('core', 's:set_pum calling complete()', a:startcol + 1, a:items)
-    call complete(a:startcol + 1, a:items)
+    call asyncomplete#log('core', 'asyncomplete#preprocess_complete calling complete()', a:ctx['startcol'] + 1, a:items)
+    call complete(a:ctx['startcol'] + 1, a:items)
 endfunction
 
 function! asyncomplete#menu_selected() abort

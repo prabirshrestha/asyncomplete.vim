@@ -42,7 +42,7 @@ g:asyncomplete_popup_delay                         *g:asyncomplete_popup_delay*
 
     Milliseconds to wait before opening the popup menu
 
-g:asyncomplete_auto_completeopt                       *g:asyncomplete_auto_completeopt*
+g:asyncomplete_auto_completeopt               *g:asyncomplete_auto_completeopt*
 
     Type: |Number|
     Default: 1
@@ -51,6 +51,39 @@ g:asyncomplete_auto_completeopt                       *g:asyncomplete_auto_compl
     This effectively overwrites what ever the user has in their config file.
 
     Set to 0 to disable.
+
+g:asyncomplete_preprocessor                        *g:asyncomplete_preprocessor*
+
+    Type: |Array| for zero or one |Function|
+    Default: []
+
+    Set a function to allow custom filtering or sorting.
+    Below example implements removing duplicates.
+
+      function! s:my_asyncomplete_preprocessor(ctx, matches) abort
+        let l:dict = {}
+        let l:items = []
+        for [l:source_name, l:matches] in items(a:matches)
+          for l:item in l:matches['items']
+            if l:item['word'] =~ '^' . a:options['base']
+              if !has_key(l:dict, l:item['word'])
+                call add(l:items, l:item)
+              endif
+            endif
+          endfor
+        endfor
+
+        call asyncomplete#preprocess_complete(a:ctx, l:items)
+      endfunction
+
+      let g:asyncomplete_preprocessor = [function('s:my_asyncomplete_preprocessor')]
+
+    Note:
+    asyncomplete#preprocess_complete() must be called synchronously.
+    Plans to support async preprocessing will be supported in the future.
+
+    context and matches in arguments in preprecessor function should be treated
+    as immutable.
 
 ===============================================================================
 3. Global vim configuration                          *asyncomplete-global-config*
