@@ -36,6 +36,13 @@ g:asyncomplete_log_file                               *g:asyncomplete_log_file*
 
     Path to log file.
 
+g:asyncomplete_popup_delay                         *g:asyncomplete_popup_delay*
+
+    Type: |Number|
+    Default: 30
+
+    Milliseconds to wait before opening the popup menu
+
 g:asyncomplete_auto_completeopt                       *g:asyncomplete_auto_completeopt*
 
     Type: |Number|
