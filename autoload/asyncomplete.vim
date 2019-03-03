@@ -17,6 +17,7 @@ if !has('timers')
 endif
 
 let s:already_setup = 0
+let s:previous_sources = {}
 let s:sources = {}
 let s:matches = {} " { server_name: { incomplete: 1, startcol: 0, items: [], refresh: 0, status: 'idle|pending|success|failure', ctx: ctx } }
 
@@ -395,6 +396,17 @@ endfunction
 function! asyncomplete#preprocess_complete(ctx, items)
     " TODO: handle cases where this is called asynchronsouly. Currently not supported
     if s:should_skip() | return | endif
+
+    " no new candidates, do not refresh the menu
+    if pumvisible() && s:previous_candidates == a:items
+        return 0
+    endif
+    let s:previous_candidates = a:items
+
+    " no candidates, do not refresh the menu
+    if len(a:items) == 0
+        return 0
+    endif
 
     call asyncomplete#log('core', 'asyncomplete#preprocess_complete')
 
