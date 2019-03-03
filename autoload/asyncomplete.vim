@@ -270,13 +270,14 @@ endfunction
 
 function! asyncomplete#complete(name, ctx, startcol, items, ...) abort
     let l:refresh = a:0 > 0 ? a:1 : 0
-    call asyncomplete#log('asyncomplete#complete', a:name, a:ctx, a:startcol, l:refresh, a:items)
     let l:ctx = asyncomplete#context()
     if !has_key(s:matches, a:name) || l:ctx['lnum'] != a:ctx['lnum'] " TODO: handle more context changes
-        call asyncomplete#log('context changed ... ignoring')
+        call asyncomplete#log('core', 'asyncomplete#log', 'ignoring due to context chnages', a:name, a:ctx, a:startcol, l:refresh, a:items)
         call s:update_pum()
         return
     endif
+
+    call asyncomplete#log('asyncomplete#complete', a:name, a:ctx, a:startcol, l:refresh, a:items)
 
     let l:matches = s:matches[a:name]
     let l:matches['items'] = s:normalize_items(a:items)
@@ -331,7 +332,7 @@ function! s:update_pum() abort
         call timer_stop(s:update_pum_timer)
         unlet s:update_pum_timer
     endif
-    call asyncomplete#log('s:update_pum')
+    call asyncomplete#log('core', 's:update_pum')
     let s:update_pum_timer = timer_start(30, function('s:recompute_pum'))
 endfunction
 
@@ -341,10 +342,10 @@ function! s:recompute_pum(...) abort
     " TODO: add support for remote recomputation of complete items,
     " Ex: heavy computation such as fuzzy search can happen in a python thread
 
-    call asyncomplete#log('s:recompute_pum')
+    call asyncomplete#log('core', 's:recompute_pum')
 
     if asyncomplete#menu_selected()
-        call asyncomplete#log('s:recomputed_pum', 'ignorning refresh pum due to menu selection')
+        call asyncomplete#log('core', 's:recomputed_pum', 'ignorning refresh pum due to menu selection')
         return
     endif
 
@@ -364,7 +365,7 @@ function! s:recompute_pum(...) abort
         let l:curitems = l:match['items']
 
         if l:curstartcol > l:ctx['col']
-            call asyncomplete#log('s:recompute_pum', 'ignoring due to wrong start col', l:curstartcol, l:ctx['col'])
+            call asyncomplete#log('core', 's:recompute_pum', 'ignoring due to wrong start col', l:curstartcol, l:ctx['col'])
             continue
         else
             let l:matches_to_filter[l:source_name] = l:match
@@ -393,10 +394,10 @@ function! s:set_pum(startcol, items) abort
     " TODO: handle cases where this is called asynchronsouly
     if s:should_skip() | return | endif
 
-    call asyncomplete#log('s:set_pum')
+    call asyncomplete#log('core', 's:set_pum')
 
     if asyncomplete#menu_selected()
-        call asyncomplete#log('s:set_pum', 'ignorning set pum due to menu selection')
+        call asyncomplete#log('core', 's:set_pum', 'ignorning set pum due to menu selection')
         return
     endif
 
@@ -404,7 +405,7 @@ function! s:set_pum(startcol, items) abort
         setl completeopt=menuone,noinsert,noselect
     endif
 
-    call asyncomplete#log(a:startcol + 1, a:items)
+    call asyncomplete#log('core', 's:set_pum calling complete()', a:startcol + 1, a:items)
     call complete(a:startcol + 1, a:items)
 endfunction
 
