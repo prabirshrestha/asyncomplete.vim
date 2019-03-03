@@ -14,9 +14,8 @@ CONTENTS                                                *asyncomplete-contents*
 
 Async autocompletion for Vim 8 and Neovim with |timers|.
 
-This is a fork of https://github.com/roxma/nvim-complete-manager in pure Vim
-script with the Python dependency removed.
-
+This is inspired by https://github.com/roxma/nvim-complete-manager but written
+in pure Vim Script.
 
 ===============================================================================
 2. Options                                               *asyncomplete-options*
