@@ -399,6 +399,7 @@ function! asyncomplete#preprocess_complete(ctx, items)
 
     " no new candidates, do not refresh the menu
     if pumvisible() && s:previous_candidates == a:items
+        call asyncomplete#log('core', 'asyncomplete#preprocess_complete', 'no need to complete, items are same')
         return 0
     endif
     let s:previous_candidates = a:items
