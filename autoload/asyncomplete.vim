@@ -289,6 +289,7 @@ function! s:normalize_items(items) abort
         for l:item in a:items
             let l:items += [{'word': l:item }]
         endfor
+        return l:items
     else
         return a:items
     endif
