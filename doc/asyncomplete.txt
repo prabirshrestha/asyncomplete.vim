@@ -61,13 +61,14 @@ g:asyncomplete_preprocessor                        *g:asyncomplete_preprocessor*
     Below example implements removing duplicates.
 
       function! s:my_asyncomplete_preprocessor(ctx, matches) abort
-        let l:dict = {}
+        let l:visited = {}
         let l:items = []
         for [l:source_name, l:matches] in items(a:matches)
           for l:item in l:matches['items']
             if l:item['word'] =~ '^' . a:options['base']
-              if !has_key(l:dict, l:item['word'])
+              if !has_key(l:visited, l:item['word'])
                 call add(l:items, l:item)
+                let l:visited[l:item['word']] = 1
               endif
             endif
           endfor
