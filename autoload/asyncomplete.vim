@@ -116,6 +116,10 @@ endfunction
 
 function! s:on_insert_leave() abort
     let s:matches = {}
+    if exists('s:update_pum_timer')
+        call timer_stop(s:update_pum_timer)
+        unlet s:update_pum_timer
+    endif
 endfunction
 
 function! s:get_active_sources_for_buffer() abort
