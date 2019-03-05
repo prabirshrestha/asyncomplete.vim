@@ -207,11 +207,7 @@ endfunction
 
 function! s:get_min_chars(source_name) abort
     let l:source = s:sources[a:source_name]
-    if has_key(l:source, 'min_chars')
-        let l:min_chars = l:source['min_chars']
-    else
-        let l:min_chars = g:asyncomplete_min_chars
-    endif
+    let l:min_chars = has_key(l:source, 'min_chars') ? l:source['min_chars'] : g:asyncomplete_min_chars
     return l:min_chars
 endfunction
 
