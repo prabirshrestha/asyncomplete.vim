@@ -82,13 +82,13 @@ function! asyncomplete#register_source(info) abort
 endfunction
 
 function! asyncomplete#unregister_source(info_or_server_name) abort
-    if type(a:info) == type({})
-        let l:server_name = a:info['name']
+    if type(a:info_or_server_name) == type({})
+        let l:server_name = a:info_or_server_name['name']
     else
-        let l:server_name = a:info
+        let l:server_name = a:info_or_server_name
     endif
     if has_key(s:sources, l:server_name)
-        let l:server = s:sources[l:servier_name]
+        let l:server = s:sources[l:server_name]
         if has_key(l:server, 'unregister')
             call l:server.unregister()
         endif
@@ -377,7 +377,9 @@ function! s:recompute_pum(...) abort
         \ }, l:ctx)
 
     if empty(g:asyncomplete_preprocessor)
-        call s:default_preprocessor(l:filter_ctx, l:matches_to_filter)
+        if !pumvisible()
+            call s:default_preprocessor(l:filter_ctx, l:matches_to_filter)
+        endif
     else
         call g:asyncomplete_preprocessor[0](l:filter_ctx, l:matches_to_filter)
     endif
