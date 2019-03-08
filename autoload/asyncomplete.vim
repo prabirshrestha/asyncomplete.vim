@@ -196,12 +196,29 @@ function! s:update_trigger_characters() abort
     call asyncomplete#log('core', 'trigger characters for buffer', bufnr('%'), b:asyncomplete_triggers)
 endfunction
 
+function! s:skip_next_completion() abort
+    let s:should_skip_next_completion = 1
+endfunction
+
 function! s:should_skip() abort
     if mode() isnot# 'i' || !b:asyncomplete_enable
+        return 1
+    elseif get(s:, 'should_skip_next_completion', 0)
+        let s:should_skip_next_completion = 0
         return 1
     else
         return 0
     endif
+endfunction
+
+function! asyncomplete#close_popup() abort
+  call s:skip_next_completion()
+  return pumvisible() ? "\<C-y>" : ''
+endfunction
+
+function! asyncomplete#cancel_popup() abort
+  call s:skip_next_completion()
+  return pumvisible() ? "\<C-e>" : ''
 endfunction
 
 function! s:on_change() abort
