@@ -20,6 +20,12 @@ let s:already_setup = 0
 let s:sources = {}
 let s:matches = {} " { server_name: { incomplete: 1, startcol: 0, items: [], refresh: 0, status: 'idle|pending|success|failure', ctx: ctx } }
 
+" do nothing, place it here only to avoid the message
+augroup asyncomplete_silence_messages
+    au!
+    autocmd User asyncomplete_setup silent
+augroup END
+
 function! s:setup_if_required() abort
     if !s:already_setup
         " register asyncomplete change manager
