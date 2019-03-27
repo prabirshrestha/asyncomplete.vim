@@ -65,7 +65,7 @@ g:asyncomplete_preprocessor                        *g:asyncomplete_preprocessor*
         let l:items = []
         for [l:source_name, l:matches] in items(a:matches)
           for l:item in l:matches['items']
-            if l:item['word'] =~ '^' . a:options['base']
+            if stridx(l:item['word'], a:options['base']) == 0
               if !has_key(l:visited, l:item['word'])
                 call add(l:items, l:item)
                 let l:visited[l:item['word']] = 1
