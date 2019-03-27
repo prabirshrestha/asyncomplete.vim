@@ -394,7 +394,7 @@ function! s:default_preprocessor(options, matches) abort
     let l:items = []
     for [l:source_name, l:matches] in items(a:matches)
         for l:item in l:matches['items']
-            if l:item['word'] =~ '^' . a:options['base']
+            if stridx(l:item['word'], a:options['base']) == 0
                 call add(l:items, l:item)
             endif
         endfor
