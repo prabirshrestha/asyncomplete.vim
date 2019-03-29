@@ -8,6 +8,7 @@ CONTENTS                                                *asyncomplete-contents*
     1. Introduction              |asyncomplete-introduction|
     2. Options                   |asyncomplete-options|
     3. Global vim configuration  |asyncomplete-global-config|
+    4. Known Issues              |asyncomplete-known-issues|
 
 ===============================================================================
 1. Introduction                                     *asyncomplete-introduction*
@@ -96,6 +97,13 @@ with them, try setting `shortmess` vim option in your `.vimrc` like so:
     set shortmess+=c
 <
 See `:help shortmess` for details and description.
+
+===============================================================================
+4. Known Issues                                       *asyncomplete-known-issues*
+
+Builtin complete such as omni func, file func flickers and closes.
+    You need vim with patch v8.1.1068.
+    https://github.com/vim/vim/commit/fd133323d4e1cc9c0e61c0ce357df4d36ea148e3
 
 ===============================================================================
 
