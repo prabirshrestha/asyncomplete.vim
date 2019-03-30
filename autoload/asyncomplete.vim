@@ -4,6 +4,12 @@ function! asyncomplete#log(...) abort
     endif
 endfunction
 
+" do nothing, place it here only to avoid the message
+augroup asyncomplete_silence_messages
+    au!
+    autocmd User asyncomplete_setup silent
+augroup END
+
 if !has('timers')
     echohl ErrorMsg
     echomsg 'Vim/Neovim compiled with timers required for asyncomplete.vim.'
@@ -19,6 +25,7 @@ endif
 let s:already_setup = 0
 let s:sources = {}
 let s:matches = {} " { server_name: { incomplete: 1, startcol: 0, items: [], refresh: 0, status: 'idle|pending|success|failure', ctx: ctx } }
+let s:has_complete_info = exists('*complete_info')
 
 function! s:setup_if_required() abort
     if !s:already_setup
@@ -394,12 +401,10 @@ function! s:recompute_pum(...) abort
         \ 'startcol': l:startcol,
         \ }, l:ctx)
 
-    if empty(g:asyncomplete_preprocessor)
-        if !pumvisible()
-            call s:default_preprocessor(l:filter_ctx, l:matches_to_filter)
-        endif
-    else
-        call g:asyncomplete_preprocessor[0](l:filter_ctx, l:matches_to_filter)
+    let l:mode = s:has_complete_info ? complete_info(['mode'])['mode'] : 'unknown'
+    if l:mode ==# '' || l:mode ==# 'eval' || l:mode ==# 'unknown'
+        let l:Preprocessor = empty(g:asyncomplete_preprocessor) ? function('s:default_preprocessor') : g:asyncomplete_preprocessor[0]
+        call l:Preprocessor(l:filter_ctx, l:matches_to_filter)
     endif
 endfunction
 
@@ -407,7 +412,7 @@ function! s:default_preprocessor(options, matches) abort
     let l:items = []
     for [l:source_name, l:matches] in items(a:matches)
         for l:item in l:matches['items']
-            if l:item['word'] =~ '^' . a:options['base']
+            if stridx(l:item['word'], a:options['base']) == 0
                 call add(l:items, l:item)
             endif
         endfor

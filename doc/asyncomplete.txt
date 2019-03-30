@@ -9,6 +9,7 @@ CONTENTS                                                *asyncomplete-contents*
     2. Options                   |asyncomplete-options|
     3. Functions                 |asyncomplete-functions|
     4. Global vim configuration  |asyncomplete-global-config|
+    5. Known Issues              |asyncomplete-known-issues|
 
 ===============================================================================
 1. Introduction                                     *asyncomplete-introduction*
@@ -66,7 +67,7 @@ g:asyncomplete_preprocessor                        *g:asyncomplete_preprocessor*
         let l:items = []
         for [l:source_name, l:matches] in items(a:matches)
           for l:item in l:matches['items']
-            if l:item['word'] =~ '^' . a:options['base']
+            if stridx(l:item['word'], a:options['base']) == 0
               if !has_key(l:visited, l:item['word'])
                 call add(l:items, l:item)
                 let l:visited[l:item['word']] = 1
@@ -113,6 +114,13 @@ with them, try setting `shortmess` vim option in your `.vimrc` like so:
     set shortmess+=c
 <
 See `:help shortmess` for details and description.
+
+===============================================================================
+5. Known Issues                                       *asyncomplete-known-issues*
+
+Builtin complete such as omni func, file func flickers and closes.
+    You need vim with patch v8.1.1068.
+    https://github.com/vim/vim/commit/fd133323d4e1cc9c0e61c0ce357df4d36ea148e3
 
 ===============================================================================
 
