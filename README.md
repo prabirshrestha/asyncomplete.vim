@@ -1,9 +1,10 @@
 asyncomplete.vim
 ================
 
-Provide async autocompletion for vim8 and neovim with `timers`.
-This repository is fork of [https://github.com/roxma/nvim-complete-manager](https://github.com/roxma/nvim-complete-manager)
-in pure vim script with python dependency removed.
+Async autocompletion for Vim 8 and Neovim with |timers|.
+
+This is inspired by [nvim-complete-manager](https://github.com/roxma/nvim-complete-manager) but written
+in pure Vim Script.
 
 ### Installing
 
@@ -14,9 +15,9 @@ Plug 'prabirshrestha/asyncomplete.vim'
 #### Tab completion
 
 ```vim
-inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<cr>"
+inoremap <expr> <cr>    pumvisible() ? "\<C-y>" : "\<cr>"
 ```
 
 ### Force refresh completion
@@ -50,28 +51,6 @@ inoremap <silent><expr> <TAB>
   \ asyncomplete#force_refresh()
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 ```
-
-### Remove duplicates
-
-If you have many sources enabled (especially the buffer source), it might be
-useful to remove duplicates from the completion list. You can enable this by
-setting `g:asyncomplete_remove_duplicates` to 1.
-
-```vim
-let g:asyncomplete_remove_duplicates = 1
-```
-
-### Smart Completion
-
-To enable fuzzy smart completion:
-
-```vim
-let g:asyncomplete_smart_completion = 1
-let g:asyncomplete_auto_popup = 1
-```
-
-Refer to docs to checks if your vim or neovim supports smart completion.
-Auto popup is required to support smart completion.
 
 #### Preview Window
 
@@ -163,10 +142,6 @@ au User asyncomplete_setup call asyncomplete#register_source({
     \ 'completor': function('s:completor'),
     \ })
 ```
-
-### Priority
-
-Use `priority` to control the order of the source. Highest priority comes first. `priority` is optional and defaults to `0` when registering a source.
 
 ### Example
 

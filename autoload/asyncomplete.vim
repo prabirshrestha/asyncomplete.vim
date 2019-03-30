@@ -1,34 +1,3 @@
-if !has('timers')
-    echohl ErrorMsg
-    echomsg 'Vim/Neovim compiled with timers required for asyncomplete.vim.'
-    echohl NONE
-    if has('nvim')
-        call asyncomplete#log('neovim compiled with timers required.')
-    else
-        call asyncomplete#log('vim compiled with timers required.')
-    endif
-    finish
-endif
-
-let s:sources = {}
-let s:change_timer = -1
-let s:on_changed_p = 0
-let s:last_tick = []
-let s:has_popped_up = 0
-let s:complete_timer_ctx = {}
-let s:already_setup = 0
-let s:next_tick_single_exec_metadata = {}
-let s:is_nvim = has('nvim')
-let s:has_lua = has('lua') || has('nvim-0.2.2')
-let s:supports_getbufinfo = exists('*getbufinfo')
-let s:supports_smart_completion = exists('##TextChangedP')
-let s:asyncomplete_folder = fnamemodify(expand('<sfile>:p:h') . '/../', ':p:h:gs?\\?/?')
-
-function! s:init_lua() abort
-    exec 'lua asyncomplete_folder="' . s:asyncomplete_folder . '"'
-    exec 'luafile ' . s:asyncomplete_folder . '/lua/asyncomplete.lua'
-endfunction
-
 function! asyncomplete#log(...) abort
     if !empty(g:asyncomplete_log_file)
         call writefile([json_encode(a:000)], g:asyncomplete_log_file, 'a')
@@ -41,110 +10,100 @@ augroup asyncomplete_silence_messages
     autocmd User asyncomplete_setup silent
 augroup END
 
-function! asyncomplete#enable_for_buffer() abort
+if !has('timers')
+    echohl ErrorMsg
+    echomsg 'Vim/Neovim compiled with timers required for asyncomplete.vim.'
+    echohl NONE
+    if has('nvim')
+        call asyncomplete#log('neovim compiled with timers required.')
+    else
+        call asyncomplete#log('vim compiled with timers required.')
+    endif
+    finish
+endif
+
+let s:already_setup = 0
+let s:sources = {}
+let s:matches = {} " { server_name: { incomplete: 1, startcol: 0, items: [], refresh: 0, status: 'idle|pending|success|failure', ctx: ctx } }
+let s:has_complete_info = exists('*complete_info')
+
+function! s:setup_if_required() abort
     if !s:already_setup
-        if s:has_lua
-            call s:init_lua()
-        endif
+        " register asyncomplete change manager
+        for l:change_manager in g:asyncomplete_change_manager
+            call asyncomplete#log('core', 'initializing asyncomplete change manager', l:change_manager)
+            if type(l:change_manager) == type('')
+                execute 'let s:on_change_manager = function("'. l:change_manager  .'")()'
+            else
+                let s:on_change_manager = l:change_manager()
+            endif
+            if has_key(s:on_change_manager, 'error')
+                call asyncomplete#log('core', 'initializing asyncomplete change manager failed', s:on_change_manager['name'], s:on_change_manager['error'])
+            else
+                call s:on_change_manager.register(function('s:on_change'))
+                call asyncomplete#log('core', 'initializing asyncomplete change manager complete', s:on_change_manager['name'])
+                break
+            endif
+        endfor
+
+        augroup asyncomplete
+            autocmd!
+            autocmd InsertEnter * call s:on_insert_enter()
+            autocmd InsertLeave * call s:on_insert_leave()
+        augroup END
+
         doautocmd User asyncomplete_setup
         let s:already_setup = 1
     endif
+endfunction
 
+function! asyncomplete#enable_for_buffer() abort
+    call s:setup_if_required()
     let b:asyncomplete_enable = 1
-    if exists('##TextChangedP')
-        augroup asyncomplete
-            autocmd! * <buffer>
-            autocmd InsertEnter <buffer> call s:remote_insert_enter()
-            autocmd InsertLeave <buffer> call s:remote_insert_leave()
-            autocmd TextChangedI <buffer> call s:on_changed()
-            autocmd TextChangedP <buffer> call s:on_changed_p()
-            autocmd FileType <buffer> call s:file_type_changed()
-        augroup END
-    else
-        augroup asyncomplete
-            autocmd! * <buffer>
-            autocmd InsertEnter <buffer> call s:remote_insert_enter()
-            autocmd InsertLeave <buffer> call s:remote_insert_leave()
-            autocmd InsertEnter <buffer> call s:change_tick_start()
-            autocmd InsertLeave <buffer> call s:change_tick_stop()
-            autocmd FileType <buffer> call s:file_type_changed()
-            " working together with timer, the timer is for detecting changes
-            " popup menu is visible. TextChangedI will not be triggered when popup
-            " menu is visible, but TextChangedI is more efficient and faster than
-            " timer when popup menu is not visible.
-            autocmd TextChangedI <buffer> call s:check_changes()
-        augroup END
-    endif
+endfunction
+
+function! asyncomplete#disable_for_buffer() abort
+    let b:asyncomplete_enable = 0
 endfunction
 
 function! asyncomplete#register_source(info) abort
     if has_key(s:sources, a:info['name'])
-        return
-    endif
-
-    call s:next_tick_single_exec('clear_active_sources', function('s:clear_active_sources'))
-
-    if has_key(a:info, 'events') && has_key(a:info, 'on_event')
-        execute 'augroup asyncomplete_source_event_' . a:info['name']
-        for l:event in a:info['events']
-            let l:exec =  'if get(b:,"asyncomplete_enable",0) | call s:python_cm_event("' . a:info['name'] . '", "'.l:event.'",asyncomplete#context()) | endif'
-            if type(l:event) == type('')
-                execute 'au ' . l:event . ' * ' . l:exec
-            elseif type(l:event) == type([])
-                execute 'au ' . join(l:event,' ') .' ' .  l:exec
-            endif
-        endfor
-        execute 'augroup end'
-    endif
-
-    let s:sources[a:info['name']] = a:info
-endfunction
-
-function! asyncomplete#unregister_source(name) abort
-    try
-        call s:next_tick_single_exec('clear_active_sources', function('s:clear_active_sources'))
-        let l:info = s:sources[a:name]
-        unlet l:info
-        unlet s:sources[a:name]
-    catch
-        return
-    endtry
-endfunction
-
-function! s:clear_active_sources() abort
-    call asyncomplete#log('core', 's:clear_active_sources', bufnr('%'))
-    if s:supports_getbufinfo
-        for l:buf in getbufinfo()
-            if has_key(l:buf['variables'], 'asyncomplete_active_sources')
-                unlet l:buf['variables']['asyncomplete_active_sources']
-            endif
-        endfor
-    endif
-endfunction
-
-function! asyncomplete#complete(name, ctx, startcol, matches, ...) abort
-    let l:refresh = a:0 > 0 ? a:1 : 0
-
-    " ignore the request if context has changed
-    if asyncomplete#context_changed(a:ctx)
-        if g:asyncomplete_force_refresh_on_context_changed
-            call s:python_cm_complete(a:name, a:ctx, a:startcol, a:matches, l:refresh, 1)
+        call asyncomplete#log('core', 'duplicate asyncomplete#register_source', a:info['name'])
+        return -1
+    else
+        let s:sources[a:info['name']] = a:info
+        if has_key(a:info, 'events') && has_key(a:info, 'on_event')
+            execute 'augroup asyncomplete_source_event_' . a:info['name']
+            for l:event in a:info['events']
+                let l:exec =  'if get(b:,"asyncomplete_enable",0) | call s:notify_event_to_source("' . a:info['name'] . '", "'.l:event.'",asyncomplete#context()) | endif'
+                if type(l:event) == type('')
+                    execute 'au ' . l:event . ' * ' . l:exec
+                elseif type(l:event) == type([])
+                    execute 'au ' . join(l:event,' ') .' ' .  l:exec
+                endif
+            endfor
+            execute 'augroup end'
         endif
         return 1
     endif
-
-    call s:python_cm_complete(a:name, a:ctx, a:startcol, a:matches, l:refresh, 0)
 endfunction
 
-function! asyncomplete#force_refresh() abort
-    return asyncomplete#menu_selected() ? "\<c-y>\<c-r>=asyncomplete#_force_refresh()\<CR>" : "\<c-r>=asyncomplete#_force_refresh()\<CR>"
-endfunction
-
-function! asyncomplete#_force_refresh() abort
-    if get(b:, 'asyncomplete_enable')
-        call s:remote_refresh(asyncomplete#context(), 1)
+function! asyncomplete#unregister_source(info_or_server_name) abort
+    if type(a:info_or_server_name) == type({})
+        let l:server_name = a:info_or_server_name['name']
+    else
+        let l:server_name = a:info_or_server_name
     endif
-    return ''
+    if has_key(s:sources, l:server_name)
+        let l:server = s:sources[l:server_name]
+        if has_key(l:server, 'unregister')
+            call l:server.unregister()
+        endif
+        unlet s:sources[l:server_name]
+        return 1
+    else
+        return -1
+    endif
 endfunction
 
 function! asyncomplete#context() abort
@@ -157,169 +116,16 @@ function! asyncomplete#context() abort
     return l:ret
 endfunction
 
-function! asyncomplete#context_changed(ctx) abort
-    " return (b:changedtick!=a:ctx['changedtick']) || (getcurpos()!=a:ctx['curpos'])
-    " Note: changedtick is triggered when `<c-x><c-u>` is pressed due to vim's
-    " bug, use curpos as workaround
-    return getcurpos() != a:ctx['curpos']
+function! s:on_insert_enter() abort
+    call s:get_active_sources_for_buffer() " call to cache
+    call s:update_trigger_characters()
 endfunction
 
-function! s:change_tick_start() abort
-    if s:change_timer != -1
-        return
-    endif
-    let s:last_tick = s:change_tick()
-    " changes every 30ms, which is 0.03s, it should be fast enough
-    let s:change_timer = timer_start(30, function('s:check_changes'), { 'repeat': -1 })
-    call s:on_changed()
-endfunction
-
-function! s:change_tick_stop() abort
-    if s:change_timer == -1
-        return
-    endif
-    call timer_stop(s:change_timer)
-    let s:last_tick = []
-    let s:change_timer = -1
-endfunction
-
-function! s:check_changes(...) abort
-    let l:tick = s:change_tick()
-    if l:tick != s:last_tick
-        let s:last_tick = l:tick
-        call s:on_changed()
-    endif
-endfunction
-
-function! s:change_tick() abort
-    return [b:changedtick, getcurpos()]
-endfunction
-
-function! s:on_changed_common() abort
-    if s:should_skip()
-        return
-    endif
-
-    if exists('s:complete_timer')
-        call timer_stop(s:complete_timer)
-        unlet s:complete_timer
-    endif
-
-    let l:ctx = asyncomplete#context()
-
-    call s:remote_refresh(l:ctx, 0)
-endfunction
-
-function! s:on_changed() abort
-    let s:on_changed_p = 0
-    call s:on_changed_common()
-endfunction
-
-function! s:on_changed_p() abort
-    if s:on_changed_p == 0
-        " avoid duplicate remote_refresh by ignoring first TextChangedP
-        let s:on_changed_p = 1
-        return
-    endif
-
-    call s:on_changed_common()
-endfunction
-
-function! s:should_skip() abort
-    return !get(b:, 'asyncomplete_enable') || mode() isnot# 'i' || &paste
-endfunction
-
-function! s:remote_insert_enter() abort
-    call asyncomplete#log('core', 'remote_insert_enter')
+function! s:on_insert_leave() abort
     let s:matches = {}
-endfunction
-
-function! s:remote_insert_leave() abort
-    call asyncomplete#log('core', 'remote_insert_leave')
-    let s:matches = {}
-endfunction
-
-function! s:file_type_changed() abort
-    call s:next_tick_single_exec('clear_active_sources', function('s:clear_active_sources'))
-endfunction
-
-function! s:get_refresh_pattern(source) abort
-    " TODO: support for function and dict
-    if has_key(a:source, 'refresh_pattern')
-        let l:refresh_pattern = a:source['refresh_pattern']
-    else
-        let l:refresh_pattern = g:asyncomplete_default_refresh_pattern
-    endif
-    return l:refresh_pattern
-endfunction
-
-function! s:remote_refresh(ctx, force) abort
-    let s:has_popped_up = 0
-    if a:force
-        call s:notify_sources_to_refresh(s:get_active_sources_for_buffer(), a:ctx)
-        return
-    endif
-
-    if !pumvisible() && !g:asyncomplete_auto_popup
-        return
-    endif
-
-    let l:typed = a:ctx['typed']
-    let l:sources_to_notify = []
-
-    for l:name in s:get_active_sources_for_buffer()
-        if !has_key(s:sources, l:name)
-            call asyncomplete#log('core', 's:remote_refresh', l:name, 'ignored')
-            continue
-        endif
-        let l:source = s:sources[l:name]
-        let l:refresh_pattern = s:get_refresh_pattern(l:source)
-        let l:matchpos = s:matchstrpos(l:typed, l:refresh_pattern)
-        let l:startpos = l:matchpos[1]
-        let l:endpos = l:matchpos[2]
-
-        call asyncomplete#log('core', 's:remote_refresh', l:name, l:matchpos, a:ctx)
-
-        let l:typed_len = l:endpos - l:startpos
-        if l:typed_len == 1
-            call add(l:sources_to_notify, l:name)
-        elseif has_key(s:matches, l:name) && s:matches[l:name]['refresh']
-            call add(l:sources_to_notify, l:name)
-        elseif s:supports_smart_completion()
-            call s:python_refresh_completions(a:ctx)
-        endif
-    endfor
-
-    call s:notify_sources_to_refresh(l:sources_to_notify, a:ctx)
-endfunction
-
-function! s:python_cm_complete(name, ctx, startcol, matches, refresh, outdated) abort
-    call asyncomplete#log('core', 's:python_cm_complete', a:name, a:ctx, a:startcol, a:refresh, a:outdated)
-    if a:outdated
-        call s:notify_sources_to_refresh([a:name], asyncomplete#context())
-        return
-    endif
-
-    if !has_key(s:matches, a:name)
-        let s:matches[a:name] = {}
-    endif
-    if empty(a:matches)
-        unlet s:matches[a:name]
-    else
-        let s:matches[a:name]['startcol'] = a:startcol
-        let s:matches[a:name]['matches'] = a:matches
-        let s:matches[a:name]['refresh'] = a:refresh
-    endif
-
-    if s:has_popped_up
-        call s:python_refresh_completions(asyncomplete#context())
-    endif
-endfunction
-
-function! s:python_cm_complete_timeout(srcs, ctx) abort
-    if !s:has_popped_up
-        call s:python_refresh_completions(a:ctx)
-        let s:has_popped_up = 1
+    if exists('s:update_pum_timer')
+        call timer_stop(s:update_pum_timer)
+        unlet s:update_pum_timer
     endif
 endfunction
 
@@ -329,7 +135,7 @@ function! s:get_active_sources_for_buffer() abort
         return b:asyncomplete_active_sources
     endif
 
-    call asyncomplete#log('core', 'computing get_active_sources_for_buffer', bufnr('%'))
+    call asyncomplete#log('core', 'computing active sources for buffer', bufnr('%'))
     let b:asyncomplete_active_sources = []
     for [l:name, l:info] in items(s:sources)
         let l:blacklisted = 0
@@ -357,178 +163,263 @@ function! s:get_active_sources_for_buffer() abort
         endif
     endfor
 
+    call asyncomplete#log('core', 'active source for buffer', bufnr('%'), b:asyncomplete_active_sources)
+
     return b:asyncomplete_active_sources
 endfunction
 
-if exists('*matchstrpos')
-    function! s:matchstrpos(expr, pattern) abort
-        return matchstrpos(a:expr, a:pattern)
-    endfunction
-else
-    function! s:matchstrpos(expr, pattern) abort
-        return [matchstr(a:expr, a:pattern), match(a:expr, a:pattern), matchend(a:expr, a:pattern)]
-    endfunction
-endif
+function! s:update_trigger_characters() abort
+    if exists('b:asyncomplete_triggers')
+        " triggers were cached for buffer
+        return b:asyncomplete_triggers
+    endif
+    let b:asyncomplete_triggers = {} " { char: { 'sourcea': 1, 'sourceb': 2 } }
 
-function! s:notify_sources_to_refresh(sources, ctx) abort
-    if exists('s:complete_timer')
-        call timer_stop(s:complete_timer)
-        unlet s:complete_timer
+    for l:source_name in s:get_active_sources_for_buffer()
+        let l:source_info = s:sources[l:source_name]
+        if has_key(l:source_info, 'triggers') && has_key(l:source_info['triggers'], &filetype)
+            let l:triggers = l:source_info['triggers'][&filetype]
+        elseif has_key(l:source_info, 'triggers') && has_key(l:source_info['triggers'], '*')
+            let l:triggers = l:source_info['triggers']['*']
+        elseif has_key(g:asyncomplete_triggers, &filetype)
+            let l:triggers = g:asyncomplete_triggers[&filetype]
+        elseif has_key(g:asyncomplete_triggers, '*')
+            let l:triggers = g:asyncomplete_triggers['*']
+        else
+            let l:triggers = []
+        endif
+
+        for l:trigger in l:triggers
+            let l:last_char = l:trigger[len(l:trigger) -1]
+            if !has_key(b:asyncomplete_triggers, l:last_char)
+                let b:asyncomplete_triggers[l:last_char] = {}
+            endif
+            if !has_key(b:asyncomplete_triggers[l:last_char], l:source_name)
+                let b:asyncomplete_triggers[l:last_char][l:source_name] = []
+            endif
+            call add(b:asyncomplete_triggers[l:last_char][l:source_name], l:trigger)
+        endfor
+    endfor
+    call asyncomplete#log('core', 'trigger characters for buffer', bufnr('%'), b:asyncomplete_triggers)
+endfunction
+
+function! s:should_skip() abort
+    if mode() isnot# 'i' || !b:asyncomplete_enable
+        return 1
+    else
+        return 0
+    endif
+endfunction
+
+function! s:on_change() abort
+    if s:should_skip() | return | endif
+
+    if !g:asyncomplete_auto_popup
+        return
     endif
 
-    let s:complete_timer = timer_start(g:asyncomplete_completion_delay, function('s:complete_timeout'))
-    let s:complete_timer_ctx = a:ctx
+    let l:ctx = asyncomplete#context()
+    let l:startcol = l:ctx['col']
+    let l:last_char = l:ctx['typed'][l:startcol - 2]
 
-    for l:name in a:sources
-        try
-            call asyncomplete#log('core', 'completor()', l:name, a:ctx)
-            call s:sources[l:name].completor(s:sources[l:name], a:ctx)
-        catch
-            call asyncomplete#log('core', 'notify_sources_to_refresh', 'error', v:exception)
-            continue
-        endtry
+    let l:sources_to_notify = {}
+    if has_key(b:asyncomplete_triggers, l:last_char)
+        " TODO: also check for multiple chars instead of just last chars for
+        " languages such as cpp which uses -> and ::
+        for l:source_name in keys(b:asyncomplete_triggers[l:last_char])
+            if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['ctx']['lnum'] != l:ctx['lnum'] || s:matches[l:source_name]['startcol'] != l:startcol
+                let l:sources_to_notify[l:source_name] = 1
+                let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
+            endif
+        endfor
+    endif
+
+    " loop left and find the start of the word and set it as the startcol for the source instead of refresh_pattern
+    let l:refresh_pattern = '\(\k\+$\|\.$\|>$\|:$\)'
+    let [l:_, l:startpos, l:endpos] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
+    let l:startcol = l:startpos
+
+    if l:startpos > -1
+        for l:source_name in b:asyncomplete_active_sources
+            if !has_key(l:sources_to_notify, l:source_name)
+                if has_key(s:matches, l:source_name) && s:matches[l:source_name]['ctx']['lnum'] ==# l:ctx['lnum'] && s:matches[l:source_name]['startcol'] ==# l:startcol
+                    continue
+                endif
+                let l:sources_to_notify[l:source_name] = 1
+                let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
+            endif
+        endfor
+    endif
+
+    call s:trigger(l:ctx)
+    call s:update_pum()
+endfunction
+
+function! s:trigger(ctx) abort
+    " send cancellation request if supported
+    for [l:source_name, l:matches] in items(s:matches)
+        call asyncomplete#log('core', 's:trigger', l:matches)
+        if l:matches['refresh'] || l:matches['status'] == 'idle' || l:matches['status'] == 'failure'
+            let l:matches['status'] = 'pending'
+            try
+                " TODO: check for min chars
+                call asyncomplete#log('core', 's:trigger.completor()', l:source_name, s:matches[l:source_name], a:ctx)
+                call s:sources[l:source_name].completor(s:sources[l:source_name], a:ctx)
+            catch
+                let l:matches['status'] = 'failure'
+                call asyncomplete#log('core', 's:trigger', 'error', v:exception)
+                continue
+            endtry
+        endif
     endfor
 endfunction
 
-function! s:sort_sources_by_priority(source1, source2) abort
-    let l:priority1 = get(get(s:sources, a:source1, {}), 'priority', 0)
-    let l:priority2 = get(get(s:sources, a:source2, {}), 'priority', 0)
-    return l:priority1 > l:priority2 ? -1 : (l:priority1 != l:priority2)
+function! asyncomplete#complete(name, ctx, startcol, items, ...) abort
+    let l:refresh = a:0 > 0 ? a:1 : 0
+    let l:ctx = asyncomplete#context()
+    if !has_key(s:matches, a:name) || l:ctx['lnum'] != a:ctx['lnum'] " TODO: handle more context changes
+        call asyncomplete#log('core', 'asyncomplete#log', 'ignoring due to context chnages', a:name, a:ctx, a:startcol, l:refresh, a:items)
+        call s:update_pum()
+        return
+    endif
+
+    call asyncomplete#log('asyncomplete#complete', a:name, a:ctx, a:startcol, l:refresh, a:items)
+
+    let l:matches = s:matches[a:name]
+    let l:matches['items'] = s:normalize_items(a:items)
+    let l:matches['refresh'] = l:refresh
+    let l:matches['startcol'] = a:startcol - 1
+    let l:matches['status'] = 'success'
+
+    call s:update_pum()
 endfunction
 
-function! s:python_refresh_completions(ctx) abort
-    let l:matches = []
+function! s:normalize_items(items) abort
+    if len(a:items) > 0 && type(a:items[0]) ==# type('')
+        let l:items = []
+        for l:item in a:items
+            let l:items += [{'word': l:item }]
+        endfor
+        return l:items
+    else
+        return a:items
+    endif
+endfunction
 
-    let l:names = keys(s:matches)
+function! asyncomplete#force_refresh() abort
+    return asyncomplete#menu_selected() ? "\<c-y>\<c-r>=asyncomplete#_force_refresh()\<CR>" : "\<c-r>=asyncomplete#_force_refresh()\<CR>"
+endfunction
 
-    if empty(l:names)
+function! asyncomplete#_force_refresh() abort
+    if s:should_skip() | return | endif
+
+    let l:ctx = asyncomplete#context()
+    let l:startcol = l:ctx['col']
+    let l:last_char = l:ctx['typed'][l:startcol - 2]
+
+    " loop left and find the start of the word or trigger chars and set it as the startcol for the source instead of refresh_pattern
+    let l:refresh_pattern = '\(\k\+$\|\.$\|>$\|:$\)'
+    let [l:_, l:startpos, l:endpos] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
+    let l:startcol = l:startpos
+
+    let s:matches = {}
+
+    for l:source_name in b:asyncomplete_active_sources
+        let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
+    endfor
+
+    call s:trigger(l:ctx)
+    call s:update_pum()
+    return ''
+endfunction
+
+function! s:update_pum() abort
+    if exists('s:update_pum_timer')
+        call timer_stop(s:update_pum_timer)
+        unlet s:update_pum_timer
+    endif
+    call asyncomplete#log('core', 's:update_pum')
+    let s:update_pum_timer = timer_start(g:asyncomplete_popup_delay, function('s:recompute_pum'))
+endfunction
+
+function! s:recompute_pum(...) abort
+    if s:should_skip() | return | endif
+
+    " TODO: add support for remote recomputation of complete items,
+    " Ex: heavy computation such as fuzzy search can happen in a python thread
+
+    call asyncomplete#log('core', 's:recompute_pum')
+
+    if asyncomplete#menu_selected()
+        call asyncomplete#log('core', 's:recomputed_pum', 'ignorning refresh pum due to menu selection')
         return
     endif
 
     let l:startcols = []
-    for l:item in values(s:matches)
-        let l:startcols += [l:item['startcol']]
+    for l:match in values(s:matches)
+        let l:startcols += [l:match['startcol']]
     endfor
+
+    let l:ctx = asyncomplete#context()
 
     let l:startcol = min(l:startcols)
-    let l:base = a:ctx['typed'][l:startcol-1:]
+    let l:base = l:ctx['typed'][l:startcol:]
 
-    let l:filtered_matches = []
+    let l:matches_to_filter = {}
+    for [l:source_name, l:match] in items(s:matches)
+        let l:curstartcol = l:match['startcol']
+        let l:curitems = l:match['items']
 
-    let l:sources = sort(keys(s:matches), function('s:sort_sources_by_priority'))
-
-    if g:asyncomplete_remove_duplicates
-        let l:sources = filter(copy(l:sources), 'index(l:sources, v:val, v:key+1) == -1')
-    endif
-
-    for l:name in l:sources
-        let l:info = s:matches[l:name]
-        let l:curstartcol = l:info['startcol']
-        let l:curmatches = l:info['matches']
-
-        if l:curstartcol > a:ctx['col']
-            " wrong start col
+        if l:curstartcol > l:ctx['col']
+            call asyncomplete#log('core', 's:recompute_pum', 'ignoring due to wrong start col', l:curstartcol, l:ctx['col'])
             continue
-        endif
-
-        let l:prefix = a:ctx['typed'][l:startcol-1 : col('.') -1]
-
-        let l:normalizedcurmatches = []
-        for l:item in l:curmatches
-            let l:e = {}
-            if type(l:item) == type('')
-                let l:e['word'] = l:item
-            else
-                let l:e = copy(l:item)
-            endif
-            let l:normalizedcurmatches += [l:e]
-        endfor
-
-        if s:supports_smart_completion()
-            let l:filtered_matches += l:normalizedcurmatches
         else
-            let l:filtered_matches += s:filter_completion_items(l:prefix, l:normalizedcurmatches)
+            let l:matches_to_filter[l:source_name] = l:match
         endif
     endfor
 
-    call s:core_complete(a:ctx, l:startcol, l:filtered_matches, s:matches)
+    let l:filter_ctx = extend({
+        \ 'base': l:base,
+        \ 'startcol': l:startcol,
+        \ }, l:ctx)
+
+    let l:mode = s:has_complete_info ? complete_info(['mode'])['mode'] : 'unknown'
+    if l:mode ==# '' || l:mode ==# 'eval' || l:mode ==# 'unknown'
+        let l:Preprocessor = empty(g:asyncomplete_preprocessor) ? function('s:default_preprocessor') : g:asyncomplete_preprocessor[0]
+        call l:Preprocessor(l:filter_ctx, l:matches_to_filter)
+    endif
 endfunction
 
-function! s:filter_completion_items(prefix, matches) abort
-    let l:tmpmatches = []
-    for l:item in a:matches
-        if l:item['word'] =~ '^' . a:prefix
-            let l:tmpmatches += [l:item]
-        endif
+function! s:default_preprocessor(options, matches) abort
+    let l:items = []
+    for [l:source_name, l:matches] in items(a:matches)
+        for l:item in l:matches['items']
+            if stridx(l:item['word'], a:options['base']) == 0
+                call add(l:items, l:item)
+            endif
+        endfor
     endfor
-    return l:tmpmatches
+
+    call asyncomplete#preprocess_complete(a:options, l:items)
 endfunction
 
-function! s:python_cm_event(name, event, ctx) abort
-    try
-        call s:sources[a:name].on_event(s:sources[a:name], a:ctx, a:event)
-    catch
-        return
-    endtry
-endfunction
+function! asyncomplete#preprocess_complete(ctx, items)
+    " TODO: handle cases where this is called asynchronsouly. Currently not supported
+    if s:should_skip() | return | endif
 
-function! s:core_complete(ctx, startcol, matches, allmatches) abort
-    if !get(b:, 'asyncomplete_enable', 0)
-        return 2
-    endif
+    call asyncomplete#log('core', 'asyncomplete#preprocess_complete')
 
-    " ignore the request if context has changed
-    if (a:ctx != asyncomplete#context()) || (mode() isnot# 'i')
-        return 1
-    endif
-
-    " something selected by user, do not refresh the menu
     if asyncomplete#menu_selected()
-        return 0
+        call asyncomplete#log('core', 'asyncomplete#preprocess_complete', 'ignorning pum update due to menu selection')
+        return
     endif
 
     if (g:asyncomplete_auto_completeopt == 1)
         setl completeopt=menuone,noinsert,noselect
     endif
 
-    call asyncomplete#log('core', 's:core_complete')
-
-    let l:candidates = s:supports_smart_completion() ? s:custom_filter_completion_items(a:ctx['typed'][a:startcol-1 : col('.') - 1], a:matches) : a:matches
-    call complete(a:startcol, l:candidates)
-endfunction
-
-function! s:supports_smart_completion() abort
-    return s:supports_smart_completion && g:asyncomplete_smart_completion
-endfunction
-
-function! s:custom_filter_completion_items(prefix, matches) abort
-    let l:start = s:is_nvim ? 1 : 0
-    let l:last = s:is_nvim ? len(a:matches) : len(a:matches) - 1
-    return luaeval('asyncomplete.filter_completion_items(_A.prefix, _A.matches, _A.start, _A.last)', { 'prefix': a:prefix, 'matches': a:matches, 'start': l:start, 'last': l:last })
-endfunction
-
-function! s:complete_timeout(timer) abort
-    " finished, clean variable
-    unlet! s:complete_timer
-    if s:complete_timer_ctx != asyncomplete#context()
-        return
-    endif
-    call s:python_cm_complete_timeout(s:sources, s:complete_timer_ctx)
-endfunction
-
-" helper function to queue the function at the end of the event loop.
-" last function wins
-function! s:next_tick_single_exec(id, func) abort
-    if has_key(s:next_tick_single_exec_metadata, a:id)
-        call timer_stop(s:next_tick_single_exec_metadata[a:id])
-        call remove(s:next_tick_single_exec_metadata, a:id)
-    endif
-    let s:next_tick_single_exec_metadata[a:id] = timer_start(0, function('s:next_tick_single_exec_callback', [a:func]))
-    return s:next_tick_single_exec_metadata[a:id]
-endfunction
-
-function s:next_tick_single_exec_callback(func, ...) abort
-    call a:func()
+    call asyncomplete#log('core', 'asyncomplete#preprocess_complete calling complete()', a:ctx['startcol'] + 1, a:items)
+    call complete(a:ctx['startcol'] + 1, a:items)
 endfunction
 
 function! asyncomplete#menu_selected() abort
@@ -536,4 +427,15 @@ function! asyncomplete#menu_selected() abort
     " current_selected item
     " if v:completed_item is empty, no item is selected
     return pumvisible() && !empty(v:completed_item)
+endfunction
+
+function! s:notify_event_to_source(name, event, ctx) abort
+    try
+        if has_key(s:sources, a:name)
+            call s:sources[a:name].on_event(s:sources[a:name], a:ctx, a:event)
+        endif
+    catch
+        call asyncomplete#log('core', 's:notify_event_to_source', 'error', v:exception)
+        return
+    endtry
 endfunction
