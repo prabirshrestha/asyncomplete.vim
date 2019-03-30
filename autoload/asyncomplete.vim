@@ -321,6 +321,7 @@ function! asyncomplete#force_refresh() abort
 endfunction
 
 function! asyncomplete#_force_refresh() abort
+    let s:should_skip_next_completion = 0
     if s:should_skip() | return | endif
 
     let l:ctx = asyncomplete#context()
