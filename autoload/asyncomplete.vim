@@ -204,7 +204,7 @@ function! s:update_trigger_characters() abort
 endfunction
 
 function! s:should_skip() abort
-    if mode() isnot# 'i' || !b:asyncomplete_enable
+    if mode() isnot# 'i' || !get(b:, 'asyncomplete_enable', 0)
         return 1
     else
         return 0
