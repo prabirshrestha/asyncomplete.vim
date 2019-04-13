@@ -7,8 +7,9 @@ CONTENTS                                                *asyncomplete-contents*
 
     1. Introduction              |asyncomplete-introduction|
     2. Options                   |asyncomplete-options|
-    3. Global vim configuration  |asyncomplete-global-config|
-    4. Known Issues              |asyncomplete-known-issues|
+    3. Functions                 |asyncomplete-functions|
+    4. Global vim configuration  |asyncomplete-global-config|
+    5. Known Issues              |asyncomplete-known-issues|
 
 ===============================================================================
 1. Introduction                                     *asyncomplete-introduction*
@@ -86,9 +87,25 @@ g:asyncomplete_preprocessor                        *g:asyncomplete_preprocessor*
 
     context and matches in arguments in preprecessor function should be treated
     as immutable.
+===============================================================================
+3. Functons                                            *asyncomplete-functions*
+
+asyncomplete#close_popup()                         *asyncomplete#close_popup()*
+
+    Insert selected candidate and close popup menu. 
+    Following example prevents popup menu from re-opening after insertion.
+
+      inoremap <expr> <C-y> pumvisible() ? asyncomplete#close_popup() : "\<C-y>"
+
+asyncomplete#cancel_popup()                       *asyncomplete#cancel_popup()*
+
+    Cancel completion and close popup menu. 
+    Following example prevents popup menu from re-opening after cancellation.
+
+      inoremap <expr> <C-e> pumvisible() ? asyncomplete#cancel_popup() : "\<C-e>"
 
 ===============================================================================
-3. Global vim configuration                          *asyncomplete-global-config*
+4. Global vim configuration                          *asyncomplete-global-config*
 
 If you notice messages like 'Pattern not found' or 'Match 1 of <N>' printed in
 red colour in vim command line and in `:messages` history and you are annoyed
@@ -99,7 +116,7 @@ with them, try setting `shortmess` vim option in your `.vimrc` like so:
 See `:help shortmess` for details and description.
 
 ===============================================================================
-4. Known Issues                                       *asyncomplete-known-issues*
+5. Known Issues                                       *asyncomplete-known-issues*
 
 Builtin complete such as omni func, file func flickers and closes.
     You need vim with patch v8.1.1068.
