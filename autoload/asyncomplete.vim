@@ -239,9 +239,7 @@ function! asyncomplete#cancel_popup() abort
 endfunction
 
 function! s:get_min_chars(source_name) abort
-    let l:source = s:sources[a:source_name]
-    let l:min_chars = has_key(l:source, 'min_chars') ? l:source['min_chars'] : g:asyncomplete_min_chars
-    return l:min_chars
+    return get(l:source[a:source_name], 'min_chars', g:asyncomplete_min_chars)
 endfunction
 
 function! s:on_change() abort
