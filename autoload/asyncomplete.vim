@@ -239,7 +239,7 @@ function! asyncomplete#cancel_popup() abort
 endfunction
 
 function! s:get_min_chars(source_name) abort
-    return get(l:source[a:source_name], 'min_chars', g:asyncomplete_min_chars)
+    return get(s:sources[a:source_name], 'min_chars', g:asyncomplete_min_chars)
 endfunction
 
 function! s:on_change() abort
