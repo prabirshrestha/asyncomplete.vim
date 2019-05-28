@@ -250,6 +250,8 @@ function! s:on_change() abort
     let l:last_char = l:ctx['typed'][l:startcol - 2]
 
     let l:sources_to_notify = {}
+
+    " match sources based on the last character if it is a trigger character
     if has_key(b:asyncomplete_triggers, l:last_char)
         " TODO: also check for multiple chars instead of just last chars for
         " languages such as cpp which uses -> and ::
@@ -262,10 +264,11 @@ function! s:on_change() abort
     endif
 
     " loop left and find the start of the word and set it as the startcol for the source instead of refresh_pattern
-    let l:refresh_pattern = '\(\k\+$\|\.$\|>$\|:$\)'
+    let l:refresh_pattern = '\(\k\+$\)'
     let [l:_, l:startpos, l:endpos] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
     let l:startcol = l:startpos
 
+    " match sources based on the word being inserted
     if l:startpos > -1
         if s:should_skip_popup() | return | endif
         for l:source_name in b:asyncomplete_active_sources
@@ -349,7 +352,7 @@ function! asyncomplete#_force_refresh() abort
     let l:last_char = l:ctx['typed'][l:startcol - 2]
 
     " loop left and find the start of the word or trigger chars and set it as the startcol for the source instead of refresh_pattern
-    let l:refresh_pattern = '\(\k\+$\|\.$\|>$\|:$\)'
+    let l:refresh_pattern = '\(\k\+$\)'
     let [l:_, l:startpos, l:endpos] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
     let l:startcol = l:startpos
 
