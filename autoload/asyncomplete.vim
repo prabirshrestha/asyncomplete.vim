@@ -247,7 +247,7 @@ function! s:on_change() abort
 
     let l:ctx = asyncomplete#context()
     let l:startcol = l:ctx['col']
-    let l:last_char = l:ctx['typed'][l:startcol - 2]
+    let l:last_char = l:ctx['typed'][l:startcol - 2] " col is 1-indexed, but str 0-indexed
 
     let l:sources_to_notify = {}
     if has_key(b:asyncomplete_triggers, l:last_char)
@@ -263,10 +263,10 @@ function! s:on_change() abort
 
     " loop left and find the start of the word and set it as the startcol for the source instead of refresh_pattern
     let l:refresh_pattern = '\(\k\+$\|\.$\|>$\|:$\)'
-    let [l:_, l:startpos, l:endpos] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
-    let l:startcol = l:startpos
+    let [l:_, l:startidx, l:endidx] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
+    let l:startcol = l:startidx + 1
 
-    if l:startpos > -1
+    if l:startidx > -1
         if s:should_skip_popup() | return | endif
         for l:source_name in b:asyncomplete_active_sources
             if !has_key(l:sources_to_notify, l:source_name)
@@ -318,7 +318,7 @@ function! asyncomplete#complete(name, ctx, startcol, items, ...) abort
     let l:matches = s:matches[a:name]
     let l:matches['items'] = s:normalize_items(a:items)
     let l:matches['refresh'] = l:refresh
-    let l:matches['startcol'] = a:startcol - 1
+    let l:matches['startcol'] = a:startcol
     let l:matches['status'] = 'success'
 
     call s:update_pum()
@@ -350,8 +350,8 @@ function! asyncomplete#_force_refresh() abort
 
     " loop left and find the start of the word or trigger chars and set it as the startcol for the source instead of refresh_pattern
     let l:refresh_pattern = '\(\k\+$\|\.$\|>$\|:$\)'
-    let [l:_, l:startpos, l:endpos] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
-    let l:startcol = l:startpos
+    let [l:_, l:startidx, l:endidx] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
+    let l:startcol = l:startidx
 
     let s:matches = {}
 
@@ -387,28 +387,26 @@ function! s:recompute_pum(...) abort
         return
     endif
 
-    let l:startcols = []
-    for l:match in values(s:matches)
-        let l:startcols += [l:match['startcol']]
-    endfor
-
     let l:ctx = asyncomplete#context()
 
-    let l:startcol = min(l:startcols)
-    let l:base = l:ctx['typed'][l:startcol:]
-
+    let l:startcols = []
     let l:matches_to_filter = {}
+
     for [l:source_name, l:match] in items(s:matches)
-        let l:curstartcol = l:match['startcol']
+	let l:startcol = l:match['startcol']
+        let l:startcols += [l:startcol]
         let l:curitems = l:match['items']
 
-        if l:curstartcol > l:ctx['col']
-            call asyncomplete#log('core', 's:recompute_pum', 'ignoring due to wrong start col', l:curstartcol, l:ctx['col'])
+        if l:startcol > l:ctx['col']
+            call asyncomplete#log('core', 's:recompute_pum', 'ignoring due to wrong start col', l:startcol, l:ctx['col'])
             continue
         else
             let l:matches_to_filter[l:source_name] = l:match
         endif
     endfor
+
+    let l:startcol = min(l:startcols)
+    let l:base = l:ctx['typed'][l:startcol - 1:] " col is 1-indexed, but str 0-indexed
 
     let l:filter_ctx = extend({
         \ 'base': l:base,
@@ -451,8 +449,8 @@ function! asyncomplete#preprocess_complete(ctx, items)
         setl completeopt=menuone,noinsert,noselect
     endif
 
-    call asyncomplete#log('core', 'asyncomplete#preprocess_complete calling complete()', a:ctx['startcol'] + 1, a:items)
-    call complete(a:ctx['startcol'] + 1, a:items)
+    call asyncomplete#log('core', 'asyncomplete#preprocess_complete calling complete()', a:ctx['startcol'], a:items)
+    call complete(a:ctx['startcol'], a:items)
 endfunction
 
 function! asyncomplete#menu_selected() abort
