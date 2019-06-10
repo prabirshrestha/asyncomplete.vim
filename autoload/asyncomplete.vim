@@ -396,7 +396,7 @@ function! s:recompute_pum(...) abort
     let l:matches_to_filter = {}
 
     for [l:source_name, l:match] in items(s:matches)
-	let l:startcol = l:match['startcol']
+        let l:startcol = l:match['startcol']
         let l:startcols += [l:startcol]
         let l:curitems = l:match['items']
 
