@@ -84,6 +84,17 @@ function! asyncomplete#register_source(info) abort
             endfor
             execute 'augroup end'
         endif
+
+        if exists('b:asyncomplete_active_sources')
+          unlet b:asyncomplete_active_sources
+          call s:get_active_sources_for_buffer()
+        endif
+
+        if exists('b:asyncomplete_triggers')
+          unlet b:asyncomplete_triggers
+          call s:update_trigger_characters()
+        endif
+
         return 1
     endif
 endfunction
