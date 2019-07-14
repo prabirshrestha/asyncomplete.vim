@@ -66,6 +66,14 @@ function! asyncomplete#disable_for_buffer() abort
     let b:asyncomplete_enable = 0
 endfunction
 
+function! asyncomplete#get_source_names() abort
+    return keys(s:sources)
+endfunction
+
+function! asyncomplete#get_source_info(source_name) abort
+    return s:sources[a:source_name]
+endfunction
+
 function! asyncomplete#register_source(info) abort
     if has_key(s:sources, a:info['name'])
         call asyncomplete#log('core', 'duplicate asyncomplete#register_source', a:info['name'])
