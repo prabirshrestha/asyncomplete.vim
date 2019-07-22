@@ -92,18 +92,48 @@ g:asyncomplete_preprocessor                        *g:asyncomplete_preprocessor*
 
 asyncomplete#close_popup()                         *asyncomplete#close_popup()*
 
-    Insert selected candidate and close popup menu. 
+    Insert selected candidate and close popup menu.
     Following example prevents popup menu from re-opening after insertion.
-
-      inoremap <expr> <C-y> pumvisible() ? asyncomplete#close_popup() : "\<C-y>"
-
+>
+    inoremap <expr> <C-y> pumvisible() ? asyncomplete#close_popup() : "\<C-y>"
+<
 asyncomplete#cancel_popup()                       *asyncomplete#cancel_popup()*
 
-    Cancel completion and close popup menu. 
+    Cancel completion and close popup menu.
     Following example prevents popup menu from re-opening after cancellation.
+>
+    inoremap <expr> <C-e> pumvisible() ? asyncomplete#cancel_popup() : "\<C-e>"
+<
+asyncomplete#get_source_info({source-name})    *asyncomplete#get_source_info()*
 
-      inoremap <expr> <C-e> pumvisible() ? asyncomplete#cancel_popup() : "\<C-e>"
+    Get the source configuration info as dict.
+    Below example implements a priority sort function.
+>
+    function! s:sort_by_priority_preprocessor(options, matches) abort
+      let l:items = []
+      for [l:source_name, l:matches] in items(a:matches)
+        for l:item in l:matches['items']
+          if stridx(l:item['word'], a:options['base']) == 0
+            let l:item['priority'] =
+                \ get(asyncomplete#get_source_info(l:source_name),'priority',0)
+            call add(l:items, l:item)
+          endif
+        endfor
+      endfor
 
+      let l:items = sort(l:items, {a, b -> b['priority'] - a['priority']})
+
+      call asyncomplete#preprocess_complete(a:options, l:items)
+    endfunction
+
+    let g:asyncomplete_preprocessor = [function('s:sort_by_priority_preprocessor')]
+<
+asyncomplete#get_source_names()               *asyncomplete#get_source_names()*
+
+    Get the registered source names list.
+>
+    let source_names = asyncomplete#get_source_names()
+<
 ===============================================================================
 4. Global vim configuration                          *asyncomplete-global-config*
 
