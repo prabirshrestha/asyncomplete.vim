@@ -131,9 +131,7 @@ asyncomplete#get_source_info({source-name})    *asyncomplete#get_source_info()*
 asyncomplete#get_source_names()               *asyncomplete#get_source_names()*
 
     Get the registered source names list.
->
-    let source_names = asyncomplete#get_source_names()
-<
+
 ===============================================================================
 4. Global vim configuration                          *asyncomplete-global-config*
 
