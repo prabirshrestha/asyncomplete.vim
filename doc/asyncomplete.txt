@@ -88,7 +88,7 @@ g:asyncomplete_preprocessor                        *g:asyncomplete_preprocessor*
     context and matches in arguments in preprecessor function should be treated
     as immutable.
 ===============================================================================
-3. Functons                                            *asyncomplete-functions*
+3. Functions                                            *asyncomplete-functions*
 
 asyncomplete#close_popup()                         *asyncomplete#close_popup()*
 
