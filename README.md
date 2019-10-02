@@ -28,7 +28,7 @@ imap <c-space> <Plug>(asyncomplete_force_refresh)
 
 ### Auto popup
 By default asyncomplete will automatically show the autocomplete popup menu as you start typing.
-If you would like to disable the default behvior set `g:asyncomplete_auto_popup` to 0.
+If you would like to disable the default behavior set `g:asyncomplete_auto_popup` to 0.
 
 ```vim
 let g:asyncomplete_auto_popup = 0
