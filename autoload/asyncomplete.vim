@@ -474,11 +474,16 @@ function! asyncomplete#preprocess_complete(ctx, items)
     endif
 
     if (g:asyncomplete_auto_completeopt == 1)
+        let l:save_completeopt = &l:completeopt
         setl completeopt=menuone,noinsert,noselect
     endif
 
     call asyncomplete#log('core', 'asyncomplete#preprocess_complete calling complete()', a:ctx['startcol'], a:items)
     call complete(a:ctx['startcol'], a:items)
+
+    if get(l:, "save_completeopt", "") != ""
+        let &l:completeopt = l:save_completeopt
+    endif
 endfunction
 
 function! asyncomplete#menu_selected() abort
