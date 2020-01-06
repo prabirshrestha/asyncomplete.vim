@@ -17,7 +17,6 @@ function! s:setup_if_required() abort
     augroup asyncomplete_utils_on_change_text_changed_p
         autocmd!
         autocmd InsertEnter * call s:on_insert_enter()
-        autocmd InsertLeave * call s:on_insert_leave()
         autocmd TextChangedI * call s:on_text_changed_i()
         autocmd TextChangedP * call s:on_text_changed_p()
     augroup END
@@ -32,11 +31,7 @@ function! s:unregister(obj, cb) abort
 endfunction
 
 function! s:on_insert_enter() abort
-    let s:previous_position = getcurpos()
-endfunction
-
-function! s:on_insert_leave() abort
-    unlet s:previous_position
+    call timer_start(100, { -> s:maybe_notify_on_change() })
 endfunction
 
 function! s:on_text_changed_i() abort
@@ -48,12 +43,8 @@ function! s:on_text_changed_p() abort
 endfunction
 
 function! s:maybe_notify_on_change() abort
-    " enter to new line or backspace to previous line shouldn't cause change trigger
-    let l:previous_position = s:previous_position
-    let s:previous_position = getcurpos()
-    if l:previous_position[1] ==# getcurpos()[1]
-        for l:Cb in s:callbacks
-            call l:Cb()
-        endfor
-    endif
+    for l:Cb in s:callbacks
+        call l:Cb()
+    endfor
 endfunction
+

@@ -266,15 +266,22 @@ function! s:on_change() abort
 
     let l:ctx = asyncomplete#context()
     let l:startcol = l:ctx['col']
-    let l:last_char = l:ctx['typed'][l:startcol - 2] " col is 1-indexed, but str 0-indexed
+    let l:trigger_char = s:get_before_char() " col is 1-indexed, but str 0-indexed
 
     let l:sources_to_notify = {}
 
+    " clear sources cache when lnum was changed.
+    for l:source_name in b:asyncomplete_active_sources
+        if has_key(s:matches, l:source_name) && s:matches[l:source_name]['ctx']['lnum'] != l:ctx['lnum']
+            let s:matches[l:source_name].items = []
+        endif
+    endfor
+
     " match sources based on the last character if it is a trigger character
-    if has_key(b:asyncomplete_triggers, l:last_char)
+    if has_key(b:asyncomplete_triggers, l:trigger_char)
         " TODO: also check for multiple chars instead of just last chars for
         " languages such as cpp which uses -> and ::
-        for l:source_name in keys(b:asyncomplete_triggers[l:last_char])
+        for l:source_name in keys(b:asyncomplete_triggers[l:trigger_char])
             if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['ctx']['lnum'] != l:ctx['lnum'] || s:matches[l:source_name]['startcol'] != l:startcol
                 let l:sources_to_notify[l:source_name] = 1
                 let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
@@ -310,7 +317,7 @@ function! s:trigger(ctx) abort
     " send cancellation request if supported
     for [l:source_name, l:matches] in items(s:matches)
         call asyncomplete#log('core', 's:trigger', l:matches)
-        if l:matches['refresh'] || l:matches['status'] == 'idle' || l:matches['status'] == 'failure'
+        if l:matches['refresh'] || l:matches['status'] ==# 'idle' || l:matches['status'] ==# 'failure'
             let l:matches['status'] = 'pending'
             try
                 " TODO: check for min chars
@@ -497,4 +504,23 @@ function! s:notify_event_to_source(name, event, ctx) abort
         call asyncomplete#log('core', 's:notify_event_to_source', 'error', v:exception)
         return
     endtry
+endfunction
+
+function! s:get_before_char() abort
+    let l:current_lnum = line('.')
+
+    let l:lnum = l:current_lnum
+    while l:lnum > 0
+        if l:lnum == l:current_lnum
+            let l:line = getline(l:lnum)[0 : max([col('.') - 2, 0])]
+        else
+            let l:line = getline(l:lnum)
+        endif
+        let l:match = matchlist(l:line, '\([^[:blank:]]\)\s*$')
+        if get(l:match, 1, v:null) isnot v:null
+            return l:match[1]
+        endif
+        let l:lnum -= 1
+    endwhile
+    return ''
 endfunction
