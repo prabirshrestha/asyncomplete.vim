@@ -132,6 +132,7 @@ function! asyncomplete#context() abort
     let l:ret['filetype'] = &filetype
     let l:ret['filepath'] = expand('%:p')
     let l:ret['typed'] = strpart(getline(l:ret['lnum']),0,l:ret['col']-1)
+    let l:ret['trigger'] = s:get_before_char_context()
     return l:ret
 endfunction
 
@@ -266,23 +267,15 @@ function! s:on_change() abort
 
     let l:ctx = asyncomplete#context()
     let l:startcol = l:ctx['col']
-    let l:trigger_char = s:get_before_char() " col is 1-indexed, but str 0-indexed
 
     let l:sources_to_notify = {}
 
-    " clear sources cache when lnum was changed.
-    for l:source_name in b:asyncomplete_active_sources
-        if has_key(s:matches, l:source_name) && s:matches[l:source_name]['ctx']['lnum'] != l:ctx['lnum']
-            let s:matches[l:source_name].items = []
-        endif
-    endfor
-
     " match sources based on the last character if it is a trigger character
-    if has_key(b:asyncomplete_triggers, l:trigger_char)
+    if !empty(l:ctx['trigger']) && has_key(b:asyncomplete_triggers, l:ctx['trigger']['char'])
         " TODO: also check for multiple chars instead of just last chars for
         " languages such as cpp which uses -> and ::
-        for l:source_name in keys(b:asyncomplete_triggers[l:trigger_char])
-            if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['ctx']['lnum'] != l:ctx['lnum'] || s:matches[l:source_name]['startcol'] != l:startcol
+        for l:source_name in keys(b:asyncomplete_triggers[l:ctx['trigger']['char']])
+            if !has_key(s:matches, l:source_name) || l:ctx['trigger'] != s:matches[l:source_name]['ctx']['trigger'] || l:ctx['lnum'] != s:matches[l:source_name]['ctx']['lnum']
                 let l:sources_to_notify[l:source_name] = 1
                 let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
             endif
@@ -306,6 +299,11 @@ function! s:on_change() abort
             endif
         endfor
     else
+        for l:source_name in b:asyncomplete_active_sources
+            if !has_key(l:sources_to_notify, l:source_name) && has_key(s:matches, l:source_name)
+                let s:matches[l:source_name].items = []
+            endif
+        endfor
         call s:disable_popup_skip()
     endif
 
@@ -506,7 +504,7 @@ function! s:notify_event_to_source(name, event, ctx) abort
     endtry
 endfunction
 
-function! s:get_before_char() abort
+function! s:get_before_char_context() abort
     let l:current_lnum = line('.')
 
     let l:lnum = l:current_lnum
@@ -516,11 +514,17 @@ function! s:get_before_char() abort
         else
             let l:line = getline(l:lnum)
         endif
-        let l:match = matchlist(l:line, '\([^[:blank:]]\)\s*$')
-        if get(l:match, 1, v:null) isnot v:null
-            return l:match[1]
+        let l:match = matchlist(l:line, '^\(.*\)\([^[:blank:]]\)\s*$')
+        if strlen(get(l:match, 0, '')) > 0
+            return {
+                        \   'position': {
+                        \     'line': l:lnum - 1,
+                        \     'character': strlen(l:match[1]) + 1,
+                        \   },
+                        \   'char': l:match[2]
+                        \ }
         endif
         let l:lnum -= 1
     endwhile
-    return ''
+    return {}
 endfunction
