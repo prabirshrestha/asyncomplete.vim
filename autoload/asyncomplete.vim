@@ -299,8 +299,12 @@ function! s:on_change() abort
             endif
         endfor
     else
+        " Clear current cache on below cases.
+        " 1. no match to keyword patterns
+        " 2. not exists in `s:sources_to_notify`
+        " 3. ctx['lum'] was changed
         for l:source_name in b:asyncomplete_active_sources
-            if !has_key(l:sources_to_notify, l:source_name) && has_key(s:matches, l:source_name)
+            if !has_key(l:sources_to_notify, l:source_name) && has_key(s:matches, l:source_name) && l:ctx['lnum'] != s:matches[l:source_name]['ctx']['lnum']
                 let s:matches[l:source_name].items = []
             endif
         endfor
