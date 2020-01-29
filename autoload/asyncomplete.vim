@@ -449,7 +449,7 @@ function! s:default_preprocessor(options, matches) abort
         let l:startcol = l:matches['startcol']
         let l:base = a:options['typed'][l:startcol - 1:]
         for l:item in l:matches['items']
-            if stridx(l:item['word'], l:base) == 0
+            if l:item['word'] =~ '^' . l:base
                 let l:startcols += [l:startcol]
                 call add(l:items, l:item)
             endif
