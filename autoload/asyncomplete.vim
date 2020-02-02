@@ -283,7 +283,7 @@ function! s:on_change() abort
     endif
 
     " loop left and find the start of the word and set it as the startcol for the source instead of refresh_pattern
-    let l:refresh_pattern = '\(\k\+$\)'
+    let l:refresh_pattern = get(b:, 'asyncomplete_refresh_pattern', '\(\k\+$\)')
     let [l:_, l:startidx, l:endidx] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
     let l:startcol = l:startidx + 1
 
@@ -370,7 +370,7 @@ function! asyncomplete#_force_refresh() abort
     let l:last_char = l:ctx['typed'][l:startcol - 2]
 
     " loop left and find the start of the word or trigger chars and set it as the startcol for the source instead of refresh_pattern
-    let l:refresh_pattern = '\(\k\+$\)'
+    let l:refresh_pattern = get(b:, 'asyncomplete_refresh_pattern', '\(\k\+$\)')
     let [l:_, l:startidx, l:endidx] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
     " When no word here, startcol is current col
     let l:startcol = l:startidx == -1 ? col('.') : l:startidx + 1
