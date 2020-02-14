@@ -310,7 +310,7 @@ function! s:trigger(ctx) abort
     " send cancellation request if supported
     for [l:source_name, l:matches] in items(s:matches)
         call asyncomplete#log('core', 's:trigger', l:matches)
-        if l:matches['refresh'] || l:matches['status'] == 'idle' || l:matches['status'] == 'failure'
+        if l:matches['refresh'] || l:matches['status'] ==# 'idle' || l:matches['status'] ==# 'failure'
             let l:matches['status'] = 'pending'
             try
                 " TODO: check for min chars
