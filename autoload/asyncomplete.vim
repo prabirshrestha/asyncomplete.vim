@@ -445,9 +445,6 @@ endfunction
 let s:pair = {
 \  '"':  '"',
 \  '''':  '''',
-\  '{':  '}',
-\  '[':  ']',
-\  '(':  ')',
 \}
 
 function! s:default_preprocessor(options, matches) abort
@@ -458,10 +455,10 @@ function! s:default_preprocessor(options, matches) abort
         let l:base = a:options['typed'][l:startcol - 1:]
         for l:item in l:matches['items']
             if stridx(l:item['word'], l:base) == 0
-                " Strip pair characters. If pre-typed text is "{", candidates
-                " should have "}" suffix.
-                if has_key(s:pair, l:base)
-                    let [l:lhs, l:rhs, l:str] = [l:base, s:pair[l:base], l:item['word']]
+                " Strip pair characters. If pre-typed text is '"', candidates
+                " should have '"' suffix.
+                if has_key(s:pair, l:base[0])
+                    let [l:lhs, l:rhs, l:str] = [l:base[0], s:pair[l:base[0]], l:item['word']]
                     if len(l:str) > 1 && l:str[0] ==# l:lhs && l:str[-1:] ==# l:rhs
                         let l:item['word'] = l:str[:-2]
                     endif
