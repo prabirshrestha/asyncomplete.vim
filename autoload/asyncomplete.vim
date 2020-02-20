@@ -453,20 +453,25 @@ function! s:default_preprocessor(options, matches) abort
     for [l:source_name, l:matches] in items(a:matches)
         let l:startcol = l:matches['startcol']
         let l:base = a:options['typed'][l:startcol - 1:]
-        for l:item in l:matches['items']
-            if stridx(l:item['word'], l:base) == 0
-                " Strip pair characters. If pre-typed text is '"', candidates
-                " should have '"' suffix.
-                if has_key(s:pair, l:base[0])
-                    let [l:lhs, l:rhs, l:str] = [l:base[0], s:pair[l:base[0]], l:item['word']]
-                    if len(l:str) > 1 && l:str[0] ==# l:lhs && l:str[-1:] ==# l:rhs
-                        let l:item['word'] = l:str[:-2]
+        if has_key(s:sources[l:source_name], 'filter')
+            let [l:items, l:startcols] = s:sources[l:source_name].filter(l:matches, l:startcol, l:base)
+        else
+            for l:item in l:matches['items']
+                if stridx(l:item['word'], l:base) == 0
+                    " Strip pair characters. If pre-typed text is '"', candidates
+                    " should have '"' suffix.
+                    if has_key(s:pair, l:base[0])
+                        let [l:lhs, l:rhs, l:str] = [l:base[0], s:pair[l:base[0]], l:item['word']]
+                        if len(l:str) > 1 && l:str[0] ==# l:lhs && l:str[-1:] ==# l:rhs
+                            let l:before = l:item['word']
+                            let l:item['word'] = l:str[:-2]
+                        endif
                     endif
+                    let l:startcols += [l:startcol]
+                    call add(l:items, l:item)
                 endif
-                let l:startcols += [l:startcol]
-                call add(l:items, l:item)
-            endif
-        endfor
+            endfor
+        endif
     endfor
 
     let a:options['startcol'] = min(l:startcols)
