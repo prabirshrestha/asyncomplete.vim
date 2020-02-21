@@ -40,6 +40,12 @@ function! s:on_insert_leave() abort
 endfunction
 
 function! s:on_text_changed_i() abort
+    let l:ctx = asyncomplete#context()
+    let l:startcol = l:ctx['col']
+    let l:last_char = l:ctx['typed'][l:startcol - 2] " col is 1-indexed, but str 0-indexed
+    if has_key(b:asyncomplete_triggers, l:last_char)
+        let s:previous_position = getcurpos()
+    endif
     call s:maybe_notify_on_change()
 endfunction
 
