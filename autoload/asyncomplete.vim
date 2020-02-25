@@ -19,6 +19,8 @@ if !has('timers')
     else
         call asyncomplete#log('vim compiled with timers required.')
     endif
+    " Clear augroup so this message is only displayed once.
+    au! asyncomplete_enable *
     finish
 endif
 
