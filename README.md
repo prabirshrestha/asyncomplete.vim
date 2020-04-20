@@ -54,16 +54,14 @@ inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
 #### Preview Window
 
-To disable preview window:
-
-```vim
-set completeopt-=preview
-```
-
 To enable preview window:
 
 ```vim
-set completeopt+=preview
+" allow modifying the completeopt variable, or it will
+" be overridden all the time
+let g:asyncomplete_auto_completeopt = 0
+
+set completeopt=menuone,noinsert,noselect,preview
 ```
 
 To auto close preview window when completion is done.
