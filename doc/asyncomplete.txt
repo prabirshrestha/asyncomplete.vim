@@ -87,6 +87,14 @@ g:asyncomplete_preprocessor                        *g:asyncomplete_preprocessor*
 
     context and matches in arguments in preprecessor function should be treated
     as immutable.
+
+g:asyncomplete_min_chars                             *g:asyncomplete_min_chars*
+
+    Type: |Number|
+    Default: 1
+
+    Minimum consecutive characters to trigger auto-popup. Overridden by buffer
+    variable if set (`b:asyncomplete_min_chars`)
 ===============================================================================
 3. Functions                                            *asyncomplete-functions*
 
