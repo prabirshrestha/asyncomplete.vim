@@ -262,9 +262,10 @@ endfunction
 function! s:get_min_chars(source_name) abort
   if exists('b:asyncomplete_min_chars')
     return b:asyncomplete_min_chars
-  else
+  elseif has_key(s:sources, a:source_name)
     return get(s:sources[a:source_name], 'min_chars', g:asyncomplete_min_chars)
   endif
+  return g:asyncomplete_min_chars
 endfunction
 
 function! s:on_change() abort
