@@ -89,7 +89,7 @@ if executable('pyls')
     au User lsp_setup call lsp#register_server({
         \ 'name': 'pyls',
         \ 'cmd': {server_info->['pyls']},
-        \ 'whitelist': ['python'],
+        \ 'allowlist': ['python'],
         \ })
 endif
 ```
@@ -137,7 +137,7 @@ endfunction
 
 au User asyncomplete_setup call asyncomplete#register_source({
     \ 'name': 'mylanguage',
-    \ 'whitelist': [*],
+    \ 'allowlist': ['*'],
     \ 'completor': function('s:completor'),
     \ })
 ```
@@ -167,7 +167,7 @@ endfunction
 
 au User asyncomplete_setup call asyncomplete#register_source({
     \ 'name': 'javascript',
-    \ 'whitelist': ['javascript'],
+    \ 'allowlist': ['javascript'],
     \ 'completor': function('s:js_completor'),
     \ })
 ```
