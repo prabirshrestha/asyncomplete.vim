@@ -160,23 +160,33 @@ function! s:get_active_sources_for_buffer() abort
     call asyncomplete#log('core', 'computing active sources for buffer', bufnr('%'))
     let b:asyncomplete_active_sources = []
     for [l:name, l:info] in items(s:sources)
-        let l:blacklisted = 0
+        let l:blocked = 0
 
-        if has_key(l:info, 'blacklist')
-            for l:filetype in l:info['blacklist']
+        if has_key(l:info, 'blocklist')
+            let l:blocklistkey = 'blocklist'
+        else
+            let l:blocklistkey = 'blacklist'
+        endif
+        if has_key(l:info, l:blocklistkey)
+            for l:filetype in l:info[l:blocklistkey]
                 if l:filetype == &filetype || l:filetype is# '*'
-                    let l:blacklisted = 1
+                    let l:blocked = 1
                     break
                 endif
             endfor
         endif
 
-        if l:blacklisted
+        if l:blocked
             continue
         endif
 
-        if has_key(l:info, 'whitelist')
-            for l:filetype in l:info['whitelist']
+        if has_key(l:info, 'allowlist')
+            let l:allowlistkey = 'allowlist'
+        else
+            let l:allowlistkey = 'whitelist'
+        endif
+        if has_key(l:info, l:allowlistkey)
+            for l:filetype in l:info[l:allowlistkey]
                 if l:filetype == &filetype || l:filetype is# '*'
                     let b:asyncomplete_active_sources += [l:name]
                     break
