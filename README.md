@@ -114,6 +114,7 @@ endif
 | [tmux complete][tmuxcomplete] | [tmux-complete.vim][tmuxcomplete]                                                                  |
 | Typescript                    | [asyncomplete-tscompletejob.vim](https://github.com/prabirshrestha/asyncomplete-tscompletejob.vim) |
 | [UltiSnips][ultisnips]        | [asyncomplete-ultisnips.vim](https://github.com/prabirshrestha/asyncomplete-ultisnips.vim)         |
+| User (compl-function)         | [asyncomplete-user.vim](https://github.com/jsit/asyncomplete-user.vim)                             |
 | Vim Syntax                    | [asyncomplete-necosyntax.vim](https://github.com/prabirshrestha/asyncomplete-necosyntax.vim)       |
 | Vim tags                      | [asyncomplete-tags.vim](https://github.com/prabirshrestha/asyncomplete-tags.vim)                   |
 | Vim                           | [asyncomplete-necovim.vim](https://github.com/prabirshrestha/asyncomplete-necovim.vim)             |
