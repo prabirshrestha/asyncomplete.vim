@@ -23,6 +23,23 @@ in pure Vim Script.
 2. Options                                               *asyncomplete-options*
 
 
+g:asyncomplete_enable_for_all                   *g:asyncomplete_enable_for_all*
+
+    Type |Number|
+    Default: 1
+
+    Enable asyncomplete for all buffers. Can be overriden with
+    `b:asyncomplete_enable` on a per-buffer basis.  Setting this to 0 prevents
+    asyncomplete from loading upon entering a buffer.
+
+b:asyncomplete_enable                                   *b:asyncomplete_enable*
+
+    Type |Number|
+    Default: 1
+
+    Setting this variable to 0 disables asyncomplete for the current buffer
+    and overrides `g:asyncomplete_enable_for_all` .
+
 g:asyncomplete_auto_popup                           *g:asyncomplete_auto_popup*
 
     Type: |Number|
