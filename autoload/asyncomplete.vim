@@ -54,7 +54,7 @@ function! s:setup_if_required() abort
             autocmd InsertLeave * call s:on_insert_leave()
         augroup END
 
-        doautocmd User asyncomplete_setup
+        doautocmd <nomodeline> User asyncomplete_setup
         let s:already_setup = 1
     endif
 endfunction
