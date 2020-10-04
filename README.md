@@ -101,6 +101,7 @@ endif
 | Languages/FileType/Source     | Links                                                                                              |
 |-------------------------------|----------------------------------------------------------------------------------------------------|
 | Buffer                        | [asyncomplete-buffer.vim](https://github.com/prabirshrestha/asyncomplete-buffer.vim)               |
+| C/C++                         | [asyncomplete-clang.vim](https://github.com/keremc/asyncomplete-clang.vim)                         |
 | Closure                       | [async-clj-omni](https://github.com/clojure-vim/async-clj-omni)                                    |
 | [Emmet][emmet-vim]            | [asyncomplete-emmet.vim](https://github.com/prabirshrestha/asyncomplete-emmet.vim)                 |
 | English                       | [asyncomplete-nextword.vim](https://github.com/high-moctane/asyncomplete-nextword.vim)             |
