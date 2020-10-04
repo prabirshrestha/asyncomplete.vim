@@ -111,6 +111,7 @@ endif
 | Filenames / directories       | [asyncomplete-file.vim](https://github.com/prabirshrestha/asyncomplete-file.vim)                   |
 | [NeoInclude][neoinclude]      | [asyncomplete-neoinclude.vim](https://github.com/kyouryuukunn/asyncomplete-neoinclude.vim)         |
 | Go                            | [asyncomplete-gocode.vim](https://github.com/prabirshrestha/asyncomplete-gocode.vim)               |
+| Git commit message            | [asyncomplete-gitcommit](https://github.com/laixintao/asyncomplete-gitcommit)                      |
 | JavaScript (Flow)             | [asyncomplete-flow.vim](https://github.com/prabirshrestha/asyncomplete-flow.vim)                   |
 | [Neosnippet][neosnippet]      | [asyncomplete-neosnippet.vim](https://github.com/prabirshrestha/asyncomplete-neosnippet.vim)       |
 | Omni                          | [asyncomplete-omni.vim](https://github.com/yami-beta/asyncomplete-omni.vim)                        |
