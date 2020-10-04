@@ -117,6 +117,7 @@ endif
 | Omni                          | [asyncomplete-omni.vim](https://github.com/yami-beta/asyncomplete-omni.vim)                        |
 | PivotalTracker stories        | [asyncomplete-pivotaltracker.vim](https://github.com/hauleth/asyncomplete-pivotaltracker.vim)      |
 | Rust (racer)                  | [asyncomplete-racer.vim](https://github.com/keremc/asyncomplete-racer.vim)                         |
+| [TabNine][TabNine] powered by AI | [asyncomplete-tabnine.vim](https://github.com/kitagry/asyncomplete-tabnine.vim)                 |
 | [tmux complete][tmuxcomplete] | [tmux-complete.vim][tmuxcomplete]                                                                  |
 | Typescript                    | [asyncomplete-tscompletejob.vim](https://github.com/prabirshrestha/asyncomplete-tscompletejob.vim) |
 | [UltiSnips][ultisnips]        | [asyncomplete-ultisnips.vim](https://github.com/prabirshrestha/asyncomplete-ultisnips.vim)         |
@@ -129,6 +130,7 @@ endif
 [emmet-vim]:    https://github.com/mattn/emmet-vim
 [neosnippet]:   https://github.com/Shougo/neosnippet.vim
 [neoinclude]:   https://github.com/Shougo/neoinclude.vim
+[TabNine]:      https://www.tabnine.com/
 [tmuxcomplete]: https://github.com/wellle/tmux-complete.vim
 [ultisnips]:    https://github.com/SirVer/ultisnips
 
