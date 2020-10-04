@@ -100,10 +100,11 @@ endif
 
 | Languages/FileType/Source     | Links                                                                                              |
 |-------------------------------|----------------------------------------------------------------------------------------------------|
+| [Ale][ale]                    | [asyncomplete-ale.vim](https://github.com/andreypopp/asyncomplete-ale.vim)                         |
 | Buffer                        | [asyncomplete-buffer.vim](https://github.com/prabirshrestha/asyncomplete-buffer.vim)               |
 | C/C++                         | [asyncomplete-clang.vim](https://github.com/keremc/asyncomplete-clang.vim)                         |
 | Closure                       | [async-clj-omni](https://github.com/clojure-vim/async-clj-omni)                                    |
-| Dictionary                    | [asyncomplete-look](https://github.com/htlsne/asyncomplete-look)                                   |
+| Dictionary (look)             | [asyncomplete-look](https://github.com/htlsne/asyncomplete-look)                                   |
 | [Emmet][emmet-vim]            | [asyncomplete-emmet.vim](https://github.com/prabirshrestha/asyncomplete-emmet.vim)                 |
 | English                       | [asyncomplete-nextword.vim](https://github.com/high-moctane/asyncomplete-nextword.vim)             |
 | Emoji                         | [asyncomplete-emoji.vim](https://github.com/prabirshrestha/asyncomplete-emoji.vim)                 |
@@ -114,7 +115,7 @@ endif
 | [Neosnippet][neosnippet]      | [asyncomplete-neosnippet.vim](https://github.com/prabirshrestha/asyncomplete-neosnippet.vim)       |
 | Omni                          | [asyncomplete-omni.vim](https://github.com/yami-beta/asyncomplete-omni.vim)                        |
 | PivotalTracker stories        | [asyncomplete-pivotaltracker.vim](https://github.com/hauleth/asyncomplete-pivotaltracker.vim)      |
-| Racer                         | [asyncomplete-racer.vim](https://github.com/keremc/asyncomplete-racer.vim)                         |
+| Rust (racer)                  | [asyncomplete-racer.vim](https://github.com/keremc/asyncomplete-racer.vim)                         |
 | [tmux complete][tmuxcomplete] | [tmux-complete.vim][tmuxcomplete]                                                                  |
 | Typescript                    | [asyncomplete-tscompletejob.vim](https://github.com/prabirshrestha/asyncomplete-tscompletejob.vim) |
 | [UltiSnips][ultisnips]        | [asyncomplete-ultisnips.vim](https://github.com/prabirshrestha/asyncomplete-ultisnips.vim)         |
@@ -123,6 +124,7 @@ endif
 | Vim tags                      | [asyncomplete-tags.vim](https://github.com/prabirshrestha/asyncomplete-tags.vim)                   |
 | Vim                           | [asyncomplete-necovim.vim](https://github.com/prabirshrestha/asyncomplete-necovim.vim)             |
 
+[ale]:          https://github.com/dense-analysis/ale
 [emmet-vim]:    https://github.com/mattn/emmet-vim
 [neosnippet]:   https://github.com/Shougo/neosnippet.vim
 [neoinclude]:   https://github.com/Shougo/neoinclude.vim
