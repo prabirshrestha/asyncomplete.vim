@@ -267,40 +267,36 @@ function! s:on_change() abort
     endif
 
     let l:ctx = asyncomplete#context()
-    let l:startcol = l:ctx['col']
-    let l:last_char = l:ctx['typed'][l:startcol - 2] " col is 1-indexed, but str 0-indexed
-
-    let l:sources_to_notify = {}
-
-    " match sources based on the last character if it is a trigger character
-    if has_key(b:asyncomplete_triggers, l:last_char)
-        " TODO: also check for multiple chars instead of just last chars for
-        " languages such as cpp which uses -> and ::
-        for l:source_name in keys(b:asyncomplete_triggers[l:last_char])
-            if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['ctx']['lnum'] != l:ctx['lnum'] || s:matches[l:source_name]['startcol'] != l:startcol
-                let l:sources_to_notify[l:source_name] = 1
-                let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
-            endif
-        endfor
-    endif
-
-    " loop left and find the start of the word and set it as the startcol for the source instead of refresh_pattern
+    let l:last_char = l:ctx['typed'][l:ctx['col'] - 2] " col is 1-indexed, but str 0-indexed
+    let l:triggered_sources = get(b:asyncomplete_triggers, l:last_char, {})
     let l:refresh_pattern = get(b:, 'asyncomplete_refresh_pattern', '\(\k\+$\)')
     let [l:_, l:startidx, l:endidx] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
-    let l:startcol = l:startidx + 1
-    let l:typed_len = l:endidx - l:startidx
 
-    if l:startidx > -1
-        for l:source_name in b:asyncomplete_active_sources
-            if l:typed_len >= s:get_min_chars(l:source_name) && !has_key(l:sources_to_notify, l:source_name)
-                if has_key(s:matches, l:source_name) && s:matches[l:source_name]['ctx']['lnum'] ==# l:ctx['lnum'] && s:matches[l:source_name]['startcol'] ==# l:startcol
-                    continue
-                endif
-                let l:sources_to_notify[l:source_name] = 1
+    for l:source_name in b:asyncomplete_active_sources
+        " match sources based on the last character if it is a trigger character
+        " TODO: also check for multiple chars instead of just last chars for
+        " languages such as cpp which uses -> and ::
+        if has_key(triggered_sources, l:source_name)
+            let l:startcol = l:ctx['col']
+        elseif l:startidx > -1 && l:endidx - l:startidx >= s:get_min_chars(l:source_name)
+            let l:startcol = l:startidx + 1 " col is 1-indexed, but str 0-indexed
+        endif
+        " here we use the existence of `l:startcol` to determine whether to
+        " use this completion source. If `l:startcol` exists, we use the
+        " source. If it does not exist, it means that we cannot get a
+        " meaningful starting point for the current source, and this implies
+        " that we cannot use this source for completion. Therefore, we remove
+        " the matches from the source.
+        if exists('l:startcol')
+            if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['ctx']['lnum'] !=# l:ctx['lnum'] || s:matches[l:source_name]['startcol'] !=# l:startcol
                 let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
             endif
-        endfor
-    endif
+        else
+            if has_key(s:matches, l:source_name)
+                unlet s:matches[l:source_name]
+            endif
+        endif
+    endfor
 
     call s:trigger(l:ctx)
     call s:update_pum()
