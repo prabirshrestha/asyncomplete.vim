@@ -143,7 +143,6 @@ function! s:on_insert_enter() abort
 endfunction
 
 function! s:on_insert_leave() abort
-    call s:disable_popup_skip()
     let s:matches = {}
     if exists('s:update_pum_timer')
         call timer_stop(s:update_pum_timer)
@@ -235,22 +234,6 @@ function! s:update_trigger_characters() abort
     call asyncomplete#log('core', 'trigger characters for buffer', bufnr('%'), b:asyncomplete_triggers)
 endfunction
 
-function! s:enable_popup_skip() abort
-    let s:skip_popup = 1
-endfunction
-
-function! s:disable_popup_skip() abort
-    let s:skip_popup = 0
-endfunction
-
-function! s:should_skip_popup() abort
-  if get(s:, 'skip_popup', 0)
-    return 1
-  else
-    return 0
-  endif
-endfunction
-
 function! s:should_skip() abort
     if mode() isnot# 'i' || !get(b:, 'asyncomplete_enable', 0)
         return 1
@@ -260,12 +243,10 @@ function! s:should_skip() abort
 endfunction
 
 function! asyncomplete#close_popup() abort
-  call s:enable_popup_skip()
   return pumvisible() ? "\<C-y>" : ''
 endfunction
 
 function! asyncomplete#cancel_popup() abort
-  call s:enable_popup_skip()
   return pumvisible() ? "\<C-e>" : ''
 endfunction
 
@@ -310,7 +291,6 @@ function! s:on_change() abort
     let l:typed_len = l:endidx - l:startidx
 
     if l:startidx > -1
-        if s:should_skip_popup() | return | endif
         for l:source_name in b:asyncomplete_active_sources
             if l:typed_len >= s:get_min_chars(l:source_name) && !has_key(l:sources_to_notify, l:source_name)
                 if has_key(s:matches, l:source_name) && s:matches[l:source_name]['ctx']['lnum'] ==# l:ctx['lnum'] && s:matches[l:source_name]['startcol'] ==# l:startcol
@@ -320,8 +300,6 @@ function! s:on_change() abort
                 let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
             endif
         endfor
-    else
-        call s:disable_popup_skip()
     endif
 
     call s:trigger(l:ctx)
@@ -384,7 +362,6 @@ function! asyncomplete#force_refresh() abort
 endfunction
 
 function! asyncomplete#_force_refresh() abort
-    call s:disable_popup_skip()
     if s:should_skip() | return | endif
 
     let l:ctx = asyncomplete#context()
@@ -419,7 +396,6 @@ endfunction
 
 function! s:recompute_pum(...) abort
     if s:should_skip() | return | endif
-    if s:should_skip_popup() | return | endif
 
     " TODO: add support for remote recomputation of complete items,
     " Ex: heavy computation such as fuzzy search can happen in a python thread
@@ -499,7 +475,6 @@ endfunction
 function! asyncomplete#preprocess_complete(ctx, items)
     " TODO: handle cases where this is called asynchronsouly. Currently not supported
     if s:should_skip() | return | endif
-    if s:should_skip_popup() | return | endif
 
     call asyncomplete#log('core', 'asyncomplete#preprocess_complete')
 
