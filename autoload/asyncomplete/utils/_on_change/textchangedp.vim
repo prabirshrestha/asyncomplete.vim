@@ -40,12 +40,6 @@ function! s:on_insert_leave() abort
 endfunction
 
 function! s:on_text_changed_i() abort
-    let l:ctx = asyncomplete#context()
-    let l:startcol = l:ctx['col']
-    let l:last_char = l:ctx['typed'][l:startcol - 2] " col is 1-indexed, but str 0-indexed
-    if exists('b:asyncomplete_triggers') && has_key(b:asyncomplete_triggers, l:last_char)
-        let s:previous_position = getcurpos()
-    endif
     call s:maybe_notify_on_change()
 endfunction
 
@@ -54,10 +48,19 @@ function! s:on_text_changed_p() abort
 endfunction
 
 function! s:maybe_notify_on_change() abort
-    " enter to new line or backspace to previous line shouldn't cause change trigger
+    " We notify on_change callbacks only when the cursor position
+    " has changed.
+    " Unfortunatelly we need this check because in insert mode it
+    " is possible to have TextChangedI triggered when the completion
+    " context is not changed at all: When we close the completion
+    " popup menu via <C-e> or <C-y>. If we still let on_change
+    " do the completion in this case we never close the menu.
+    " Vim doesn't allow programmatically changing buffer content
+    " in insert mode, so by comparing the cursorpos we know
+    " whether the context has changed.
     let l:previous_position = s:previous_position
     let s:previous_position = getcurpos()
-    if l:previous_position[1] ==# getcurpos()[1]
+    if l:previous_position !=# s:previous_position
         for l:Cb in s:callbacks
             call l:Cb()
         endfor
