@@ -32,11 +32,16 @@ function! s:unregister(obj, cb) abort
 endfunction
 
 function! s:on_insert_enter() abort
-    let s:previous_position = getcurpos()
+    let l:context = asyncomplete#context()
+    let s:previous_context = {
+        \ 'lnum': l:context['lnum'],
+        \ 'col': l:context['col'],
+        \ 'typed': l:context['typed'],
+        \ }
 endfunction
 
 function! s:on_insert_leave() abort
-    unlet s:previous_position
+    unlet s:previous_context
 endfunction
 
 function! s:on_text_changed_i() abort
@@ -56,11 +61,16 @@ function! s:maybe_notify_on_change() abort
     " popup menu via <C-e> or <C-y>. If we still let on_change
     " do the completion in this case we never close the menu.
     " Vim doesn't allow programmatically changing buffer content
-    " in insert mode, so by comparing the cursorpos we know
-    " whether the context has changed.
-    let l:previous_position = s:previous_position
-    let s:previous_position = getcurpos()
-    if l:previous_position !=# s:previous_position
+    " in insert mode, so by comparing the cursor's position and the
+    " completion base we know whether the context has changed.
+    let l:context = asyncomplete#context()
+    let l:previous_context = s:previous_context
+    let s:previous_context = {
+        \ 'lnum': l:context['lnum'],
+        \ 'col': l:context['col'],
+        \ 'typed': l:context['typed'],
+        \ }
+    if l:previous_context !=# s:previous_context
         for l:Cb in s:callbacks
             call l:Cb()
         endfor
