@@ -17,7 +17,14 @@ Plug 'prabirshrestha/asyncomplete.vim'
 ```vim
 inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-inoremap <expr> <cr>    pumvisible() ? "\<C-y>" : "\<cr>"
+inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
+```
+
+If you prefer the enter key to always insert a new line (even if the popup menu is visible) then
+you can amend the above mapping as follows:
+
+```vim
+inoremap <expr> <cr> pumvisible() ? asyncomplete#close_popup() . "\<cr>" : "\<cr>"
 ```
 
 ### Force refresh completion
