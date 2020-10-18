@@ -25,6 +25,52 @@ local function vimlist_insert(list, value)
     error('asyncomplete not initialized')
 end
 
+local function get_active_sources_for_buffer(bufnr)
+    if not bufnr then bufnr = vim.fn.bufnr('%') end
+    local result = vim.fn.getbufvar(bufnr, 'asyncomplete_active_sources')
+    if type(result) == 'string' and result ~= '' then
+        return result
+    end
+
+    result = vimlist_new()
+
+    local filetype = vim.fn.getbufvar(bufnr, '&filetype')
+
+    for k, v in pairs(sources) do
+        local blocked = false
+        local blocklist = v['blocklist']
+        if blocklist then
+            for _,v in pairs(blocklist) do
+                if v == filetype or v == '*' then
+                    blocked = true
+                    break
+                end
+            end
+        end
+
+        if not blocked then
+            local allowlist = v['allowlist']
+            if allowlist then
+                for _,v in pairs(allowlist) do
+                    if v == filetype or v == '*' then
+                        vimlist_insert(result, k)
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    vim.fn.setbufvar(bufnr, 'asyncomplete_active_sources', result)
+
+    return result
+end
+
+local function clear_active_sources_for_buffer(bufnr)
+    if not bufnr then bufnr = vim.fn.bufnr('%') end
+    vim.fn.setbufvar(bufnr, 'asyncomplete_active_sources', '')
+end
+
 function M.init()
     if init then
         error('asyncomplete already inited')
@@ -74,7 +120,7 @@ function M.enable()
         C.fromEvent('InsertEnter', 'asyncomplete__insertenter'),
         C.filter(function () return M.is_enabled() end),
         C.map(function () print('insert enter') end),
-        C.map(function () M.get_active_sources_for_buffer() end), -- pre-cache active sources before the user starts typing
+        C.map(function () get_active_sources_for_buffer() end), -- pre-cache active sources before the user starts typing
         C.switchMap(function ()
             return C.pipe(
                 C.fromEvent({ 'TextChanged', 'TextChangedI', 'TextChangedP' }, 'asyncomplete__textchanged'),
@@ -119,52 +165,6 @@ end
 
 function M.unregister(name)
     -- TODO
-end
-
-function M.get_active_sources_for_buffer(bufnr)
-    if not bufnr then bufnr = vim.fn.bufnr('%') end
-    local result = vim.fn.getbufvar(bufnr, 'asyncomplete_active_sources')
-    if type(result) == 'string' and result ~= '' then
-        return result
-    end
-
-    result = vimlist_new()
-
-    local filetype = vim.fn.getbufvar(bufnr, '&filetype')
-
-    for k, v in pairs(sources) do
-        local blocked = false
-        local blocklist = v['blocklist']
-        if blocklist then
-            for _,v in pairs(blocklist) do
-                if v == filetype or v == '*' then
-                    blocked = true
-                    break
-                end
-            end
-        end
-
-        if not blocked then
-            local allowlist = v['allowlist']
-            if allowlist then
-                for _,v in pairs(allowlist) do
-                    if v == filetype or v == '*' then
-                        vimlist_insert(result, k)
-                        break
-                    end
-                end
-            end
-        end
-    end
-
-    vim.fn.setbufvar(bufnr, 'asyncomplete_active_sources', result)
-
-    return result
-end
-
-local function clear_active_sources_for_buffer(bufnr)
-    if not bufnr then bufnr = vim.fn.bufnr('%') end
-    vim.fn.setbufvar(bufnr, 'asyncomplete_active_sources', '')
 end
 
 return M
