@@ -124,14 +124,14 @@ function M.enable()
         C.switchMap(function ()
             return C.pipe(
                 C.fromEvent({ 'TextChanged', 'TextChangedI', 'TextChangedP' }, 'asyncomplete__textchanged'),
+                C.filter(function () return M.is_enabled_for_buffer() end),
+                C.map(function () print('textchanged') end),
                 C.takeUntil(
                     C.pipe(
                         C.fromEvent('InsertLeave', 'asyncomplete__insertleave'),
                         C.map(function() print('insert leave') end)
                     )
-                ),
-                C.filter(function () return M.is_enabled_for_buffer() end),
-                C.map(function () print('textchanged') end)
+                )
             )
         end),
         C.subscribe({ error = function () M.disable() end })
