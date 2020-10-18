@@ -12,6 +12,7 @@ function M.init()
     else
         has_lua = false
     end
+    print('init')
 end
 
 return M
