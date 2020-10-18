@@ -114,6 +114,7 @@ function M.register(options)
     else
         sources[options['name']] = options
     end
+    -- TODO refresh active sources
 end
 
 function M.unregister(name)
@@ -129,8 +130,31 @@ function M.get_active_sources_for_buffer(bufnr)
 
     result = vimlist_new()
 
-    for k,_ in pairs(sources) do
-        vimlist_insert(result, k)
+    local filetype = vim.fn.getbufvar(bufnr, '&filetype')
+
+    for k, v in pairs(sources) do
+        local blocked = false
+        local blocklist = v['blocklist']
+        if blocklist then
+            for _,v in pairs(blocklist) do
+                if v == filetype or v == '*' then
+                    blocked = true
+                    break
+                end
+            end
+        end
+
+        if not blocked then
+            local allowlist = v['allowlist']
+            if allowlist then
+                for _,v in pairs(allowlist) do
+                    if v == filetype or v == '*' then
+                        vimlist_insert(result, k)
+                        break
+                    end
+                end
+            end
+        end
     end
 
     vim.fn.setbufvar(bufnr, 'asyncomplete_active_sources', result)
@@ -138,11 +162,9 @@ function M.get_active_sources_for_buffer(bufnr)
     return result
 end
 
-function clear_active_sources_for_buffer(bufnr)
+local function clear_active_sources_for_buffer(bufnr)
     if not bufnr then bufnr = vim.fn.bufnr('%') end
-    if type(result) ~= 'string' then
-        vim.fn.setbufvar(bufnr, 'asyncomplete_active_sources', '')
-    end
+    vim.fn.setbufvar(bufnr, 'asyncomplete_active_sources', '')
 end
 
 return M
