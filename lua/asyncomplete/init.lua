@@ -2,10 +2,16 @@ local M = {}
 local C = require 'asyncomplete/callbag'
 local disable = nil
 
+-- TODO: implement lazy()
 local has_lua = false
+local has_nvim = false
 
 function M.has_lua()
     return has_lua
+end
+
+function M.has_nvim()
+    return has_nvim
 end
 
 function M.init()
@@ -15,7 +21,17 @@ function M.init()
         has_lua = false
     end
 
+    if vim.fn.has('nvim') == 1 then
+        M.command = vim.api.nvim_command
+    else
+        M.command = vim.command
+    end
+
     M.enable()
+end
+
+function M.command(cmd)
+    error('asyncomplete not initialized')
 end
 
 function M.enable()
@@ -24,7 +40,7 @@ function M.enable()
 
     disable = C.pipe(
         C.fromEvent('InsertEnter', 'asyncomplete__insertenter'),
-        C.map(function() print('insert enter') end),
+        C.map(function () print('insert enter') end),
         C.switchMap(function ()
             return C.pipe(
                 C.fromEvent({ 'TextChanged', 'TextChangedI', 'TextChangedP' }, 'asyncomplete__textchanged'),
