@@ -22,15 +22,23 @@ function M.init()
     end
 
     if vim.fn.has('nvim') == 1 then
-        M.command = vim.api.nvim_command
+        M.vimcmd = vim.api.nvim_command
+        M.vimeval = vim.api.nvim_eval
     else
-        M.command = vim.command
+        M.vimcmd = vim.command
+        M.vimeval = vim.eval
     end
 
-    M.enable()
+    if M.vimeval('g:asyncomplete_use_lua') == 1 then
+        M.enable()
+    end
 end
 
-function M.command(cmd)
+function M.vimcmd(cmd)
+    error('asyncomplete not initialized')
+end
+
+function M.vimeval(str)
     error('asyncomplete not initialized')
 end
 
