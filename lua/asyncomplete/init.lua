@@ -15,11 +15,12 @@ function M.has_nvim()
 end
 
 function M.init()
-    if vim and vim.fn and vim.fn.has and (vim.fn.has('nvim-0.5.0') or (vim.fn.has('lua') and vim.fn.has('patch-8.2.1066')) == 0) then
-        has_lua = true
-    else
+    if not (vim and vim.fn and vim.fn.has and (vim.fn.has('nvim-0.5.0') or (vim.fn.has('lua') and vim.fn.has('patch-8.2.1066')) == 0)) then
         has_lua = false
+        return
     end
+
+    has_lua = true
 
     if vim.fn.has('nvim') == 1 then
         M.vimcmd = vim.api.nvim_command
@@ -53,13 +54,14 @@ function M.enable()
         C.switchMap(function ()
             return C.pipe(
                 C.fromEvent({ 'TextChanged', 'TextChangedI', 'TextChangedP' }, 'asyncomplete__textchanged'),
-                C.map(function () print('textchanged') end),
                 C.takeUntil(
                     C.pipe(
                         C.fromEvent('InsertLeave', 'asyncomplete__insertleave'),
                         C.map(function() print('insert leave') end)
                     )
-                )
+                ),
+                C.filter(function () return M.is_enabled_for_buffer() end),
+                C.map(function () print('textchanged') end)
             )
         end),
         C.subscribe({})
@@ -74,7 +76,12 @@ function M.disable()
 end
 
 function M.is_enabled()
-    return M.has_lua() and M.vimeval('g:asyncomplete_use_lua') == 1 and M.vimeval('g:asyncomplete_enabled') == 1
+    return M.has_lua() and M.vimeval('g:asyncomplete_use_lua') == 1 and M.vimeval('g:asyncomplete_enable') == 1
+end
+
+function M.is_enabled_for_buffer(bufnr)
+    if not bufnr then bufnr = vim.fn.bufnr('%') end
+    return M.has_lua() and M.vimeval('getbufvar(' .. bufnr ..', "asyncomplete_enable")')
 end
 
 return M

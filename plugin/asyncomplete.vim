@@ -5,7 +5,7 @@ let g:asyncomplete_loaded = 1
 
 let s:has_lua = has('nvim-0.5.0') || (has('lua') && has('patch-8.2.1066'))
 let g:asyncomplete_use_lua = get(g:, 'asyncomplete_use_lua', s:has_lua)
-let g:asyncomplete_enabled = get(g:, 'asyncomplete_enabled', 1)
+let g:asyncomplete_enable = get(g:, 'asyncomplete_enable', 1)
 
 if s:has_lua
     lua require('asyncomplete').init()
