@@ -29,7 +29,7 @@ function M.init()
         M.vimeval = vim.eval
     end
 
-    if M.vimeval('g:asyncomplete_use_lua') == 1 then
+    if M.vimeval('g:asyncomplete_use_lua') == 1 and M.vimeval('g:asyncomplete_enable') then
         M.enable()
     end
 end
