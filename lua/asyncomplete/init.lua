@@ -29,7 +29,7 @@ function M.init()
         M.vimeval = vim.eval
     end
 
-    if M.vimeval('g:asyncomplete_use_lua') == 1 and M.vimeval('g:asyncomplete_enable') then
+    if M.is_enabled() then
         M.enable()
     end
 end
@@ -48,6 +48,7 @@ function M.enable()
 
     disable = C.pipe(
         C.fromEvent('InsertEnter', 'asyncomplete__insertenter'),
+        C.filter(function () return M.is_enabled() end),
         C.map(function () print('insert enter') end),
         C.switchMap(function ()
             return C.pipe(
@@ -70,6 +71,10 @@ function M.disable()
         disable()
         disable = nil
     end
+end
+
+function M.is_enabled()
+    return M.has_lua() and M.vimeval('g:asyncomplete_use_lua') == 1 and M.vimeval('g:asyncomplete_enabled') == 1
 end
 
 return M
