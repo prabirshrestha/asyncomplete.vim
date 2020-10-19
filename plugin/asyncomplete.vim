@@ -14,6 +14,7 @@ let g:asyncomplete_manager = get(g:, 'asyncomplete_manager', 'asyncomplete#manag
 let g:asyncomplete_change_manager = get(g:, 'asyncomplete_change_manager', ['asyncomplete#utils#_on_change#textchangedp#init', 'asyncomplete#utils#_on_change#timer#init'])
 let g:asyncomplete_triggers = get(g:, 'asyncomplete_triggers', {'*': ['.', '>', ':'] })
 let g:asyncomplete_min_chars = get(g:, 'asyncomplete_min_chars', 1)
+let g:asyncomplete_refresh_pattern = get(g:, 'asyncomplete_refresh_pattern', '\(\k\+$\)')
 
 let g:asyncomplete_auto_completeopt = get(g:, 'asyncomplete_auto_completeopt', 1)
 let g:asyncomplete_auto_popup = get(g:, 'asyncomplete_auto_popup', 1)
