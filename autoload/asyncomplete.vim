@@ -448,7 +448,9 @@ function! s:default_preprocessor(options, matches) abort
         let l:startcol = l:matches['startcol']
         let l:base = a:options['typed'][l:startcol - 1:]
         if has_key(s:sources[l:source_name], 'filter')
-            let [l:items, l:startcols] = s:sources[l:source_name].filter(l:matches, l:startcol, l:base)
+            let l:result = s:sources[l:source_name].filter(l:matches, l:startcol, l:base)
+            let l:items += l:result[0]
+            let l:startcols += l:result[1]
         else
             for l:item in l:matches['items']
                 if stridx(l:item['word'], l:base) == 0
