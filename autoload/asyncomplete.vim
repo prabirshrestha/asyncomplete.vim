@@ -276,7 +276,7 @@ function! s:on_change() abort
         " match sources based on the last character if it is a trigger character
         " TODO: also check for multiple chars instead of just last chars for
         " languages such as cpp which uses -> and ::
-        if has_key(triggered_sources, l:source_name)
+        if has_key(l:triggered_sources, l:source_name)
             let l:startcol = l:ctx['col']
         elseif l:startidx > -1 && l:endidx - l:startidx >= s:get_min_chars(l:source_name)
             let l:startcol = l:startidx + 1 " col is 1-indexed, but str 0-indexed
@@ -475,7 +475,7 @@ function! s:default_preprocessor(options, matches) abort
     call asyncomplete#preprocess_complete(a:options, l:items)
 endfunction
 
-function! asyncomplete#preprocess_complete(ctx, items)
+function! asyncomplete#preprocess_complete(ctx, items) abort
     " TODO: handle cases where this is called asynchronsouly. Currently not supported
     if s:should_skip() | return | endif
 
