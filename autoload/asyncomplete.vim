@@ -409,6 +409,8 @@ function! s:recompute_pum(...) abort
     let l:matches_to_filter = {}
 
     for [l:source_name, l:match] in items(s:matches)
+        " ignore sources that have been unregistered
+        if !has_key(s:sources, l:source_name) | continue | endif
         let l:startcol = l:match['startcol']
         let l:startcols += [l:startcol]
         let l:curitems = l:match['items']
