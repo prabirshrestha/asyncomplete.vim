@@ -268,7 +268,11 @@ function! s:on_change() abort
 
     let l:ctx = asyncomplete#context()
     let l:last_char = l:ctx['typed'][l:ctx['col'] - 2] " col is 1-indexed, but str 0-indexed
-    let l:triggered_sources = get(b:asyncomplete_triggers, l:last_char, {})
+    if exists('b:asyncomplete_triggers')
+        let l:triggered_sources = get(b:asyncomplete_triggers, l:last_char, {})
+    else
+        let l:triggered_sources = {}
+    endif
     let l:refresh_pattern = get(b:, 'asyncomplete_refresh_pattern', '\(\k\+$\)')
     let [l:_, l:startidx, l:endidx] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
 
