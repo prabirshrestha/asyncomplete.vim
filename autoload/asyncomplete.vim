@@ -276,7 +276,7 @@ function! s:on_change() abort
     let l:refresh_pattern = get(b:, 'asyncomplete_refresh_pattern', '\(\k\+$\)')
     let [l:_, l:startidx, l:endidx] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
 
-    for l:source_name in b:asyncomplete_active_sources
+    for l:source_name in get(b:, 'asyncomplete_active_sources', [])
         " match sources based on the last character if it is a trigger character
         " TODO: also check for multiple chars instead of just last chars for
         " languages such as cpp which uses -> and ::
