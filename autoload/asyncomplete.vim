@@ -376,7 +376,7 @@ function! asyncomplete#_force_refresh() abort
 
     let s:matches = {}
 
-    for l:source_name in b:asyncomplete_active_sources
+    for l:source_name in get(b:, 'asyncomplete_active_sources', [])
         let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
     endfor
 
