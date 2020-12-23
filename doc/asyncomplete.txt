@@ -112,6 +112,17 @@ g:asyncomplete_min_chars                             *g:asyncomplete_min_chars*
 
     Minimum consecutive characters to trigger auto-popup. Overridden by buffer
     variable if set (`b:asyncomplete_min_chars`)
+
+g:asyncomplete_matchfuzzy                           *g:asyncomplete_matchfuzzy*
+
+    Type: |Number|
+    Default: `exists('*matchfuzzypos')`
+
+    Use |matchfuzzypos| to support fuzzy matching of 'word' when completing
+    items. Requires vim with `matchfuzzypos()` function to exists.
+
+    Set to `0` to disable fuzzy matching.
+
 ===============================================================================
 3. Functions                                            *asyncomplete-functions*
 
