@@ -42,7 +42,7 @@ let g:asyncomplete_auto_popup = 0
 ```
 
 You can use the above `<Plug>(asyncomplete_force_refresh)` to show the popup
-or can you tab to show the autocomplete.
+or you can tab to show the autocomplete.
 
 ```vim
 let g:asyncomplete_auto_popup = 0
