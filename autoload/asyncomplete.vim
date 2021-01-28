@@ -492,7 +492,7 @@ function! s:strip_pair_characters(base, item) abort
     if has_key(s:pair, a:base[0])
         let [l:lhs, l:rhs, l:str] = [a:base[0], s:pair[a:base[0]], l:item['word']]
         if len(l:str) > 1 && l:str[0] ==# l:lhs && l:str[-1:] ==# l:rhs
-            let l:item = copy({}, l:item)
+            let l:item = extend({}, l:item)
             let l:item['word'] = l:str[:-2]
         endif
     endif
