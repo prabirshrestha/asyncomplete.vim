@@ -111,7 +111,7 @@ endif
 | Buffer                        | [asyncomplete-buffer.vim](https://github.com/prabirshrestha/asyncomplete-buffer.vim)               |
 | C/C++                         | [asyncomplete-clang.vim](https://github.com/keremc/asyncomplete-clang.vim)                         |
 | Clojure                       | [async-clj-omni](https://github.com/clojure-vim/async-clj-omni)                                    |
-| Common Lisp (vlime)           | [asyncomplete-vlime(https://github.com/uki00a/asyncomplete-vlime.vim)                              |
+| Common Lisp (vlime)           | [vlime](https://github.com/vlime/vlime)                                                            |
 | Dictionary (look)             | [asyncomplete-look](https://github.com/htlsne/asyncomplete-look)                                   |
 | [Emmet][emmet-vim]            | [asyncomplete-emmet.vim](https://github.com/prabirshrestha/asyncomplete-emmet.vim)                 |
 | English                       | [asyncomplete-nextword.vim](https://github.com/high-moctane/asyncomplete-nextword.vim)             |
