@@ -283,7 +283,7 @@ function! s:on_change() abort
         " languages such as cpp which uses -> and ::
         if has_key(l:triggered_sources, l:source_name)
             let l:startcol = l:ctx['col']
-        elseif l:startidx > -1 && l:endidx - l:startidx >= s:get_min_chars(l:source_name)
+        elseif l:startidx > -1
             let l:startcol = l:startidx + 1 " col is 1-indexed, but str 0-indexed
         endif
         " here we use the existence of `l:startcol` to determine whether to
@@ -292,7 +292,7 @@ function! s:on_change() abort
         " meaningful starting point for the current source, and this implies
         " that we cannot use this source for completion. Therefore, we remove
         " the matches from the source.
-        if exists('l:startcol')
+        if exists('l:startcol') && l:endidx - l:startidx >= s:get_min_chars(l:source_name)
             if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['ctx']['lnum'] !=# l:ctx['lnum'] || s:matches[l:source_name]['startcol'] !=# l:startcol
                 let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
             endif
