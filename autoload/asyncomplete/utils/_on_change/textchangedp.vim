@@ -41,7 +41,7 @@ function! s:on_insert_enter() abort
 endfunction
 
 function! s:on_insert_leave() abort
-    unlet s:previous_context
+    unlet! s:previous_context
 endfunction
 
 function! s:on_text_changed_i() abort
@@ -53,6 +53,9 @@ function! s:on_text_changed_p() abort
 endfunction
 
 function! s:maybe_notify_on_change() abort
+    if !exists('s:previous_context')
+        return
+    endif
     " We notify on_change callbacks only when the cursor position
     " has changed.
     " Unfortunatelly we need this check because in insert mode it
