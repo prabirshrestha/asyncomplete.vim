@@ -108,7 +108,7 @@ g:asyncomplete_preprocessor                        *g:asyncomplete_preprocessor*
 g:asyncomplete_min_chars                             *g:asyncomplete_min_chars*
 
     Type: |Number|
-    Default: 1
+    Default: 0
 
     Minimum consecutive characters to trigger auto-popup. Overridden by buffer
     variable if set (`b:asyncomplete_min_chars`)
