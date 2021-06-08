@@ -515,7 +515,11 @@ function! asyncomplete#preprocess_complete(ctx, items) abort
     endif
 
     call asyncomplete#log('core', 'asyncomplete#preprocess_complete calling complete()', a:ctx['startcol'], a:items)
-    call complete(a:ctx['startcol'], a:items)
+    try
+        call complete(a:ctx['startcol'], a:items)
+    catch /^Vim\%((\a\+)\)\=:E578/	" Error: Not allowed to change text here
+        call asyncomplete#log('core', 'asyncomplete#preprocess_complete', 'error', v:exception)
+    endtry
 endfunction
 
 function! asyncomplete#menu_selected() abort
