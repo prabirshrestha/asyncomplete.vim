@@ -514,8 +514,11 @@ function! asyncomplete#preprocess_complete(ctx, items) abort
         setl completeopt=menuone,noinsert,noselect
     endif
 
-    call asyncomplete#log('core', 'asyncomplete#preprocess_complete calling complete()', a:ctx['startcol'], a:items)
-    call complete(a:ctx['startcol'], a:items)
+    let l:startcol = a:ctx['startcol']
+    call asyncomplete#log('core', 'asyncomplete#preprocess_complete calling complete()', l:startcol, a:items)
+    if l:startcol > 0 " Prevent E578: Not allowed to change text here
+        call complete(l:startcol, a:items)
+    endif
 endfunction
 
 function! asyncomplete#menu_selected() abort
