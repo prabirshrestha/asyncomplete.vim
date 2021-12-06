@@ -31,6 +31,8 @@ inoremap <expr> <cr> pumvisible() ? asyncomplete#close_popup() . "\<cr>" : "\<cr
 
 ```vim
 imap <c-space> <Plug>(asyncomplete_force_refresh)
+" For Vim 8 (<c-@> corresponds to <c-space>):
+" imap <c-@> <Plug>(asyncomplete_force_refresh)
 ```
 
 ### Auto popup
