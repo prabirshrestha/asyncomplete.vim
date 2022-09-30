@@ -123,6 +123,16 @@ g:asyncomplete_matchfuzzy                           *g:asyncomplete_matchfuzzy*
 
     Set to `0` to disable fuzzy matching.
 
+g:asyncomplete_max_num_candidates           *g:asyncomplete_max_num_candidates*
+
+    Type: |Number|
+    Default: 50
+
+    This option controls the maximum number of  completion suggestions shown
+    in the completion menu.
+
+    A value of 0 or less-than 0 means there is no limit.
+
 ===============================================================================
 3. Functions                                            *asyncomplete-functions*
 

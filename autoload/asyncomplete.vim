@@ -515,9 +515,15 @@ function! asyncomplete#preprocess_complete(ctx, items) abort
     endif
 
     let l:startcol = a:ctx['startcol']
-    call asyncomplete#log('core', 'asyncomplete#preprocess_complete calling complete()', l:startcol, a:items)
+
+    let l:candidates = a:items
+    if  g:asyncomplete_max_num_candidates > 0 && len(a:items) > g:asyncomplete_max_num_candidates
+        l:candidates = slice(a:items)
+    endif
+
+    call asyncomplete#log('core', 'asyncomplete#preprocess_complete calling complete()', l:startcol, l:candidates)
     if l:startcol > 0 " Prevent E578: Not allowed to change text here
-        call complete(l:startcol, a:items)
+        call complete(l:startcol, l:candidates)
     endif
 endfunction
 
