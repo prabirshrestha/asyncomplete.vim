@@ -518,7 +518,7 @@ function! asyncomplete#preprocess_complete(ctx, items) abort
 
     let l:candidates = a:items
     if  g:asyncomplete_max_num_candidates > 0 && len(a:items) > g:asyncomplete_max_num_candidates
-        l:candidates = slice(a:items)
+        let l:candidates = slice(a:items, 0, g:asyncomplete_max_num_candidates)
     endif
 
     call asyncomplete#log('core', 'asyncomplete#preprocess_complete calling complete()', l:startcol, l:candidates)
