@@ -126,7 +126,7 @@ g:asyncomplete_matchfuzzy                           *g:asyncomplete_matchfuzzy*
 g:asyncomplete_max_num_candidates           *g:asyncomplete_max_num_candidates*
 
     Type: |Number|
-    Default: 50
+    Default: 0
 
     This option controls the maximum number of  completion suggestions shown
     in the completion menu.

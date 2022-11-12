@@ -21,6 +21,6 @@ let g:asyncomplete_popup_delay = get(g:, 'asyncomplete_popup_delay', 30)
 let g:asyncomplete_log_file = get(g:, 'asyncomplete_log_file', '')
 let g:asyncomplete_preprocessor = get(g:, 'asyncomplete_preprocessor', [])
 let g:asyncomplete_matchfuzzy = get(g:, 'asyncomplete_matchfuzzy', exists('*matchfuzzypos'))
-let g:asyncomplete_max_num_candidates = get(g:, 'asyncomplete_max_num_candidates', 50)
+let g:asyncomplete_max_num_candidates = get(g:, 'asyncomplete_max_num_candidates', 0)
 
 inoremap <silent> <expr> <Plug>(asyncomplete_force_refresh) asyncomplete#force_refresh()
