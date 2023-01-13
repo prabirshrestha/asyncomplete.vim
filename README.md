@@ -218,7 +218,7 @@ All the credit goes to the following projects
 
 ### Code Contributors
 
-This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+This project exists thanks to all the people who contribute.
 <a href="https://github.com/prabirshrestha/asyncomplete.vim/graphs/contributors"><img src="https://opencollective.com/asyncomplete/contributors.svg?width=890&button=false" /></a>
 
 ### Financial Contributors
