@@ -26,7 +26,7 @@ jobs:
             glibc_version: 2.15
     runs-on: ${{matrix.os}}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download vim
         shell: bash
         run: |
