@@ -274,6 +274,7 @@ function! s:on_change() abort
     else
         let l:triggered_sources = {}
     endif
+    let l:refresh_always = get(b:, 'asyncomplete_refresh_always', 0)
     let l:refresh_pattern = get(b:, 'asyncomplete_refresh_pattern', '\(\k\+$\)')
     let [l:_, l:startidx, l:endidx] = asyncomplete#utils#matchstrpos(l:ctx['typed'], l:refresh_pattern)
 
@@ -294,7 +295,7 @@ function! s:on_change() abort
         " the matches from the source.
         if exists('l:startcol') && l:endidx - l:startidx >= s:get_min_chars(l:source_name)
             if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['ctx']['lnum'] !=# l:ctx['lnum'] || s:matches[l:source_name]['startcol'] !=# l:startcol
-                let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': 0, 'ctx': l:ctx }
+                let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': l:refresh_always, 'ctx': l:ctx }
             endif
         else
             if has_key(s:matches, l:source_name)
