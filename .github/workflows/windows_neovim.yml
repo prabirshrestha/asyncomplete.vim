@@ -39,7 +39,7 @@ jobs:
       - name: Run tests
         shell: cmd
         run: |
-          SET PATH=%USERPROFILE%\Neovim\bin;%PATH%;
+          SET PATH=%USERPROFILE%\nvim-${{matrix.neovim_arch}}\bin;%PATH%;
           SET PATH=%USERPROFILE%\themis\bin;%PATH%;
           SET THEMIS_VIM=nvim
           nvim --version
