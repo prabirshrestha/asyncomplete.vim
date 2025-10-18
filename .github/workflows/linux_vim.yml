@@ -19,11 +19,11 @@ jobs:
           - name: vim-v91-x64
             os: ubuntu-latest
             vim_version: 9.1.1864
-            glibc_version: 2.15
+            glibc_version: 2.34
           - name: vim-v90-x64
             os: ubuntu-latest
             vim_version: 9.0.2190
-            glibc_version: 2.15
+            glibc_version: 2.34
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v4
