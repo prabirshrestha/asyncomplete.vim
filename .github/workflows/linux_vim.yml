@@ -14,19 +14,25 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        name: [vim-v82-x64, vim-v81-x64]
+        name: [vim-v91-x64, vim-v90-x64]
         include:
-          - name: vim-v82-x64
+          - name: vim-v91-x64
             os: ubuntu-latest
-            vim_version: 8.2.0813
-            glibc_version: 2.15
-          - name: vim-v81-x64
+            vim_version: 9.1.1864
+            glibc_version: 2.34
+          - name: vim-v90-x64
             os: ubuntu-latest
-            vim_version: 8.1.2414
-            glibc_version: 2.15
+            vim_version: 9.0.2190
+            glibc_version: 2.29
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v4
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -y --no-install-recommends \
+            libfuse2
       - name: Download vim
         shell: bash
         run: |

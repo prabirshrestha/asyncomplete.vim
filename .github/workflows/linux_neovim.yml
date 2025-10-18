@@ -14,11 +14,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        name: [neovim-v04-x64,neovim-nightly-x64]
+        name: [neovim-v11-x64,neovim-nightly-x64]
         include:
-          - name: neovim-v04-x64
+          - name: neovim-v11-x64
             os: ubuntu-latest
-            neovim_version: v0.4.3
+            neovim_version: v0.11.4
           - name: neovim-nightly-x64
             os: ubuntu-latest
             neovim_version: nightly
@@ -29,7 +29,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p ~/nvim/bin
-          curl -L https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim.appimage -o ~/nvim/bin/nvim
+          curl -L https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim-linux-x86_64.appimage -o ~/nvim/bin/nvim
           chmod u+x ~/nvim/bin/nvim
       - name: Download test runner
         shell: bash

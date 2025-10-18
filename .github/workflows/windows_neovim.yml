@@ -14,11 +14,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        name: [neovim-v04-x64,neovim-nightly-x64]
+        name: [neovim-v11-x64,neovim-nightly-x64]
         include:
-          - name: neovim-v04-x64
+          - name: neovim-v11-x64
             os: windows-latest
-            neovim_version: v0.4.3
+            neovim_version: v0.11.4
             neovim_arch: win64
           - name: neovim-nightly-x64
             os: windows-latest
@@ -39,7 +39,7 @@ jobs:
       - name: Run tests
         shell: cmd
         run: |
-          SET PATH=%USERPROFILE%\Neovim\bin;%PATH%;
+          SET PATH=%USERPROFILE%\nvim-${{matrix.neovim_arch}}\bin;%PATH%;
           SET PATH=%USERPROFILE%\themis\bin;%PATH%;
           SET THEMIS_VIM=nvim
           nvim --version
