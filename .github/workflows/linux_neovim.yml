@@ -14,11 +14,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        name: [neovim-v04-x64,neovim-nightly-x64]
+        name: [neovim-v11-x64,neovim-nightly-x64]
         include:
           - name: neovim-v04-x64
             os: ubuntu-latest
-            neovim_version: v0.4.3
+            neovim_version: v0.11.4
           - name: neovim-nightly-x64
             os: ubuntu-latest
             neovim_version: nightly
