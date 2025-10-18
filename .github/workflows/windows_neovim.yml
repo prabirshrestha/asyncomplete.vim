@@ -16,7 +16,7 @@ jobs:
         os: [windows-latest]
         name: [neovim-v11-x64,neovim-nightly-x64]
         include:
-          - name: neovim-v04-x64
+          - name: neovim-v11-x64
             os: windows-latest
             neovim_version: v0.11.4
             neovim_arch: win64
