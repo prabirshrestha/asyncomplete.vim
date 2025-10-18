@@ -37,7 +37,7 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          export PATH=~/nvim-osx64/bin:$PATH
+          export PATH=~/nvim-macos-x86_64/bin:$PATH
           export PATH=~/themis/bin:$PATH
           export THEMIS_VIM=nvim
           nvim --version
