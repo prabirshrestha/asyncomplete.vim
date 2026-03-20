@@ -243,7 +243,11 @@ function! s:update_trigger_characters() abort
 endfunction
 
 function! s:should_skip() abort
-    return mode() isnot# 'i' || !get(b:, 'asyncomplete_enable', 0)
+    if mode() isnot# 'i' || !get(b:, 'asyncomplete_enable', 0)
+        return 1
+    else
+        return 0
+    endif
 endfunction
 
 function! asyncomplete#close_popup() abort
