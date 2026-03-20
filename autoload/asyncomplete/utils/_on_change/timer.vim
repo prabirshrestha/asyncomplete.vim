@@ -71,7 +71,7 @@ function! s:maybe_notify_on_change() abort
     " enter to new line or backspace to previous line shouldn't cause change trigger
     let l:previous_position = s:previous_position
     let s:previous_position = getcurpos()
-    if l:previous_position[1] ==# getcurpos()[1]
+    if l:previous_position[1] ==# s:previous_position[1]
         for l:Cb in s:callbacks
             call l:Cb()
         endfor

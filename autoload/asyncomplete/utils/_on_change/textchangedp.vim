@@ -32,11 +32,12 @@ function! s:unregister(obj, cb) abort
 endfunction
 
 function! s:on_insert_enter() abort
-    let l:context = asyncomplete#context()
+    let l:lnum = line('.')
+    let l:col = col('.')
     let s:previous_context = {
-        \ 'lnum': l:context['lnum'],
-        \ 'col': l:context['col'],
-        \ 'typed': l:context['typed'],
+        \ 'lnum': l:lnum,
+        \ 'col': l:col,
+        \ 'typed': strpart(getline(l:lnum), 0, l:col - 1),
         \ }
 endfunction
 
@@ -66,12 +67,14 @@ function! s:maybe_notify_on_change() abort
     " Vim doesn't allow programmatically changing buffer content
     " in insert mode, so by comparing the cursor's position and the
     " completion base we know whether the context has changed.
-    let l:context = asyncomplete#context()
+    let l:lnum = line('.')
+    let l:col = col('.')
+    let l:typed = strpart(getline(l:lnum), 0, l:col - 1)
     let l:previous_context = s:previous_context
     let s:previous_context = {
-        \ 'lnum': l:context['lnum'],
-        \ 'col': l:context['col'],
-        \ 'typed': l:context['typed'],
+        \ 'lnum': l:lnum,
+        \ 'col': l:col,
+        \ 'typed': l:typed,
         \ }
     if l:previous_context !=# s:previous_context
         for l:Cb in s:callbacks

@@ -1,7 +1,8 @@
 function! asyncomplete#log(...) abort
-    if !empty(g:asyncomplete_log_file)
-        call writefile([json_encode(a:000)], g:asyncomplete_log_file, 'a')
+    if empty(g:asyncomplete_log_file)
+        return
     endif
+    call writefile([json_encode(a:000)], g:asyncomplete_log_file, 'a')
 endfunction
 
 " do nothing, place it here only to avoid the message
@@ -129,13 +130,19 @@ function! asyncomplete#unregister_source(info_or_server_name) abort
 endfunction
 
 function! asyncomplete#context() abort
-    let l:ret = {'bufnr':bufnr('%'), 'curpos':getcurpos(), 'changedtick':b:changedtick}
-    let l:ret['lnum'] = l:ret['curpos'][1]
-    let l:ret['col'] = l:ret['curpos'][2]
-    let l:ret['filetype'] = &filetype
-    let l:ret['filepath'] = expand('%:p')
-    let l:ret['typed'] = strpart(getline(l:ret['lnum']),0,l:ret['col']-1)
-    return l:ret
+    let l:curpos = getcurpos()
+    let l:lnum = l:curpos[1]
+    let l:col = l:curpos[2]
+    return {
+        \ 'bufnr': bufnr('%'),
+        \ 'curpos': l:curpos,
+        \ 'changedtick': b:changedtick,
+        \ 'lnum': l:lnum,
+        \ 'col': l:col,
+        \ 'filetype': &filetype,
+        \ 'filepath': expand('%:p'),
+        \ 'typed': strpart(getline(l:lnum), 0, l:col - 1),
+        \ }
 endfunction
 
 function! s:on_insert_enter() abort
@@ -188,7 +195,7 @@ function! s:get_active_sources_for_buffer() abort
         if has_key(l:info, l:allowlistkey)
             for l:filetype in l:info[l:allowlistkey]
                 if l:filetype == &filetype || l:filetype is# '*'
-                    let b:asyncomplete_active_sources += [l:name]
+                    call add(b:asyncomplete_active_sources, l:name)
                     break
                 endif
             endfor
@@ -222,7 +229,7 @@ function! s:update_trigger_characters() abort
         endif
 
         for l:trigger in l:triggers
-            let l:last_char = l:trigger[len(l:trigger) -1]
+            let l:last_char = l:trigger[-1:]
             if !has_key(b:asyncomplete_triggers, l:last_char)
                 let b:asyncomplete_triggers[l:last_char] = {}
             endif
@@ -282,18 +289,15 @@ function! s:on_change() abort
         " match sources based on the last character if it is a trigger character
         " TODO: also check for multiple chars instead of just last chars for
         " languages such as cpp which uses -> and ::
+        let l:has_startcol = 0
         if has_key(l:triggered_sources, l:source_name)
             let l:startcol = l:ctx['col']
+            let l:has_startcol = 1
         elseif l:startidx > -1
             let l:startcol = l:startidx + 1 " col is 1-indexed, but str 0-indexed
+            let l:has_startcol = 1
         endif
-        " here we use the existence of `l:startcol` to determine whether to
-        " use this completion source. If `l:startcol` exists, we use the
-        " source. If it does not exist, it means that we cannot get a
-        " meaningful starting point for the current source, and this implies
-        " that we cannot use this source for completion. Therefore, we remove
-        " the matches from the source.
-        if exists('l:startcol') && l:endidx - l:startidx >= s:get_min_chars(l:source_name)
+        if l:has_startcol && l:endidx - l:startidx >= s:get_min_chars(l:source_name)
             if !has_key(s:matches, l:source_name) || s:matches[l:source_name]['ctx']['lnum'] !=# l:ctx['lnum'] || s:matches[l:source_name]['startcol'] !=# l:startcol
                 let s:matches[l:source_name] = { 'startcol': l:startcol, 'status': 'idle', 'items': [], 'refresh': l:refresh_always, 'ctx': l:ctx }
             endif
@@ -351,7 +355,7 @@ function! s:normalize_items(items) abort
     if len(a:items) > 0 && type(a:items[0]) ==# type('')
         let l:items = []
         for l:item in a:items
-            let l:items += [{'word': l:item }]
+            call add(l:items, {'word': l:item})
         endfor
         return l:items
     else
@@ -367,8 +371,6 @@ function! asyncomplete#_force_refresh() abort
     if s:should_skip() | return | endif
 
     let l:ctx = asyncomplete#context()
-    let l:startcol = l:ctx['col']
-    let l:last_char = l:ctx['typed'][l:startcol - 2]
 
     " loop left and find the start of the word or trigger chars and set it as the startcol for the source instead of refresh_pattern
     let l:refresh_pattern = get(b:, 'asyncomplete_refresh_pattern', '\(\k\+$\)')
@@ -418,8 +420,7 @@ function! s:recompute_pum(...) abort
         " ignore sources that have been unregistered
         if !has_key(s:sources, l:source_name) | continue | endif
         let l:startcol = l:match['startcol']
-        let l:startcols += [l:startcol]
-        let l:curitems = l:match['items']
+        call add(l:startcols, l:startcol)
 
         if l:startcol > l:ctx['col']
             call asyncomplete#log('core', 's:recompute_pum', 'ignoring due to wrong start col', l:startcol, l:ctx['col'])
@@ -460,21 +461,21 @@ function! s:default_preprocessor(options, matches) abort
             let l:items += l:result[0]
             let l:startcols += l:result[1]
         else
+            let l:need_strip = !empty(l:base) && has_key(s:pair, l:base[0])
             if empty(l:base)
-                for l:item in l:matches['items']
-                    call add(l:items, s:strip_pair_characters(l:base, l:item))
-                    let l:startcols += [l:startcol]
-                endfor
+                let l:items += l:matches['items']
+                let l:startcols += repeat([l:startcol], len(l:matches['items']))
             elseif s:has_matchfuzzypos && g:asyncomplete_matchfuzzy
-                for l:item in matchfuzzypos(l:matches['items'], l:base, {'key':'word'})[0]
-                    call add(l:items, s:strip_pair_characters(l:base, l:item))
-                    let l:startcols += [l:startcol]
+                let l:filtered = matchfuzzypos(l:matches['items'], l:base, {'key':'word'})[0]
+                for l:item in l:filtered
+                    call add(l:items, l:need_strip ? s:strip_pair_characters(l:base, l:item) : l:item)
+                    call add(l:startcols, l:startcol)
                 endfor
             else
                 for l:item in l:matches['items']
                     if stridx(l:item['word'], l:base) == 0
-                        call add(l:items, s:strip_pair_characters(l:base, l:item))
-                        let l:startcols += [l:startcol]
+                        call add(l:items, l:need_strip ? s:strip_pair_characters(l:base, l:item) : l:item)
+                        call add(l:startcols, l:startcol)
                     endif
                 endfor
             endif
