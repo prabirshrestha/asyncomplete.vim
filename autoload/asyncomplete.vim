@@ -195,7 +195,7 @@ function! s:get_active_sources_for_buffer() abort
         if has_key(l:info, l:allowlistkey)
             for l:filetype in l:info[l:allowlistkey]
                 if l:filetype == &filetype || l:filetype is# '*'
-                    let b:asyncomplete_active_sources += [l:name]
+                    call add(b:asyncomplete_active_sources, l:name)
                     break
                 endif
             endfor
@@ -229,7 +229,7 @@ function! s:update_trigger_characters() abort
         endif
 
         for l:trigger in l:triggers
-            let l:last_char = l:trigger[len(l:trigger) -1]
+            let l:last_char = l:trigger[-1:]
             if !has_key(b:asyncomplete_triggers, l:last_char)
                 let b:asyncomplete_triggers[l:last_char] = {}
             endif
@@ -243,11 +243,7 @@ function! s:update_trigger_characters() abort
 endfunction
 
 function! s:should_skip() abort
-    if mode() isnot# 'i' || !get(b:, 'asyncomplete_enable', 0)
-        return 1
-    else
-        return 0
-    endif
+    return mode() isnot# 'i' || !get(b:, 'asyncomplete_enable', 0)
 endfunction
 
 function! asyncomplete#close_popup() abort
@@ -355,7 +351,7 @@ function! s:normalize_items(items) abort
     if len(a:items) > 0 && type(a:items[0]) ==# type('')
         let l:items = []
         for l:item in a:items
-            let l:items += [{'word': l:item }]
+            call add(l:items, {'word': l:item})
         endfor
         return l:items
     else
@@ -371,8 +367,6 @@ function! asyncomplete#_force_refresh() abort
     if s:should_skip() | return | endif
 
     let l:ctx = asyncomplete#context()
-    let l:startcol = l:ctx['col']
-    let l:last_char = l:ctx['typed'][l:startcol - 2]
 
     " loop left and find the start of the word or trigger chars and set it as the startcol for the source instead of refresh_pattern
     let l:refresh_pattern = get(b:, 'asyncomplete_refresh_pattern', '\(\k\+$\)')
@@ -422,8 +416,7 @@ function! s:recompute_pum(...) abort
         " ignore sources that have been unregistered
         if !has_key(s:sources, l:source_name) | continue | endif
         let l:startcol = l:match['startcol']
-        let l:startcols += [l:startcol]
-        let l:curitems = l:match['items']
+        call add(l:startcols, l:startcol)
 
         if l:startcol > l:ctx['col']
             call asyncomplete#log('core', 's:recompute_pum', 'ignoring due to wrong start col', l:startcol, l:ctx['col'])
@@ -467,11 +460,7 @@ function! s:default_preprocessor(options, matches) abort
             let l:need_strip = !empty(l:base) && has_key(s:pair, l:base[0])
             if empty(l:base)
                 let l:items += l:matches['items']
-                let l:n = len(l:matches['items'])
-                while l:n > 0
-                    call add(l:startcols, l:startcol)
-                    let l:n -= 1
-                endwhile
+                let l:startcols += repeat([l:startcol], len(l:matches['items']))
             elseif s:has_matchfuzzypos && g:asyncomplete_matchfuzzy
                 let l:filtered = matchfuzzypos(l:matches['items'], l:base, {'key':'word'})[0]
                 for l:item in l:filtered
